@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./Login.css";
 
 export default function Login() {
-  const navigate = useNavigate(); // ✅ this stays
+  const navigate = useNavigate(); 
 
   return (
     <div className="login-page">
@@ -25,8 +25,11 @@ export default function Login() {
         <label>Password</label>
         <input type="password" placeholder="••••••••" />
 
-        <button className="login-btn">Log In</button>
-
+        <button
+              className="login-btn"
+              onClick={() => navigate("/home")} 
+                > Log In </button>
+                
         <p className="forgot-password">Forgot password?</p>
 
         <p className="signup-text">
