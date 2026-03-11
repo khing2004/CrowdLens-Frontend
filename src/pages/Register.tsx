@@ -1,6 +1,8 @@
+// src/pages/Register.tsx
 import "./Register.css";
 import { useState } from "react";
 import ReCAPTCHA from "react-google-recaptcha";
+import { Link } from "react-router-dom";
 
 export default function Register() {
   const [captchaValue, setCaptchaValue] = useState<string | null>(null);
@@ -15,18 +17,15 @@ export default function Register() {
       alert("Please verify that you are not a robot!");
       return;
     }
-    // Proceed with signup logic here
+    // TODO: Proceed with signup logic (call backend)
     console.log("Form submitted!");
   };
 
   return (
     <div className="register-page">
-      {/* Side background image */}
       <img src="/Image2.png" className="side-image" alt="background" />
 
-      {/* Register Card */}
       <div className="register-card">
-        {/* Logo + Crowdlens centered at top */}
         <div className="logo-area">
           <img src="/Logo.png" alt="logo" className="logo" />
           <img src="/Crowdlens.png" alt="crowdlens" className="logo-text" />
@@ -43,7 +42,6 @@ export default function Register() {
         <label>Confirm Password</label>
         <input type="password" placeholder="••••••••" />
 
-        {/* Google reCAPTCHA */}
         <div className="captcha-wrapper">
           <ReCAPTCHA
             sitekey="6Ld-eIYsAAAAAHv0Hx7lnj5-sb54WO7qKYzcCR_S"
@@ -56,7 +54,10 @@ export default function Register() {
         </button>
 
         <p className="login-text">
-          Already have an account? <span>Log In</span>
+          Already have an account?{" "}
+          <Link to="/" className="login-link">
+            Log In
+          </Link>
         </p>
       </div>
     </div>
