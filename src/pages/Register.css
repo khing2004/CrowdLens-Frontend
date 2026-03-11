@@ -16,20 +16,18 @@
 }
 
 .logo-area {
-  position: absolute;
-  top: 90px;
-  left: 30px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
+  margin-bottom: 20px;
 }
 
 .logo {
-  width: 60px;
+  width: 80px;
 }
 
 .logo-text {
-  width: 220px;
+  width: 200px;
 }
 
 .register-card {
@@ -46,7 +44,7 @@
 }
 
 .title {
-  font-size: 24px;
+  text-align: center;
   margin-bottom: 20px;
 }
 
@@ -87,4 +85,22 @@ input {
 .login-text span {
   color: green;
   cursor: pointer;
+}
+
+.captcha {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  width: 250px;
+  margin: 15px auto;
+  cursor: pointer;
+  background: #f9f9f9;
+}
+
+.captcha-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 15px 0;
 }
