@@ -1,0 +1,57 @@
+.forecast-page {
+  background: whitesmoke;
+  min-height: 100vh;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Inter', sans-serif;
+}
+
+.back-btn {
+  align-self: flex-start;
+  margin-bottom: 20px;
+  color: #30924C;
+  font-weight: bold;
+}
+
+.forecast-card {
+  width: 100%;
+  max-width: 400px;
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+select {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  background: #f9f9f9;
+}
+
+.forecast-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 25px;
+  border: none;
+  background: #30924C;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.result-box {
+  margin-top: 30px;
+  text-align: center;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.result-box.high { background: #ffebee; color: #c62828; }
+.result-box.medium { background: #fff3e0; color: #ef6c00; }
+.result-box.low { background: #e8f5e9; color: #2e7d32; }
