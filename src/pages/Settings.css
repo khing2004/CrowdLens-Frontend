@@ -1,0 +1,9 @@
+.no-color-link,
+.no-color-link:link,
+.no-color-link:visited,
+.no-color-link:hover,
+.no-color-link:active {
+  color: inherit; /* Inherits the color of the parent element's text */
+  text-decoration: none; /* Removes the default underline */
+  cursor: pointer; /* Ensures the cursor changes to a hand icon on hover */
+}
