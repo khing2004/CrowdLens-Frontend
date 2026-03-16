@@ -78,7 +78,7 @@ export default function UserHomePage() {
       {/* Bottom navigation */}
       <div className="bottom-nav">
         <Link to="/home" className="nav-item active">
-          <img src="/Home.png" alt="Home" className="nav-icon" />
+          <img src="/Home Selected.png" alt="Home" className="nav-icon" />
           <p className="nav-text">Home</p>
         </Link>
         <Link to="/favorites" className="nav-item">

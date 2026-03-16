@@ -7,7 +7,7 @@ export default function Settings() {
       {/* Background */}
       <img src="/Image2.png" className="background-image" alt="Background" />
 
-      <p>Account Settings</p>
+      <p className="page-label">Account Settings</p>
 
       <div></div>
 
@@ -29,7 +29,11 @@ export default function Settings() {
           <p className="nav-text">Favorites</p>
         </Link>
         <Link to="/settings" className="nav-item active">
-          <img src="/Settings.png" alt="Account" className="nav-icon" />
+          <img
+            src="/Settings Selected.png"
+            alt="Account"
+            className="nav-icon"
+          />
           <p className="nav-text">Account</p>
         </Link>
       </div>
