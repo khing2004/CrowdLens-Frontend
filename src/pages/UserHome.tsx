@@ -68,12 +68,21 @@ export default function UserHomePage() {
         </MapContainer>
       </main>
 
-      {/* Bottom Navigation (Icon-less or using Emoji/Text) */}
-      <nav className="bottom-nav">
-        <button className="nav-btn active">Home</button>
-        <button className="nav-btn">Forecast</button>
-        <button className="nav-btn">Account</button>
-      </nav>
+      {/* Bottom navigation */}
+      <div className="bottom-nav">
+        <Link to="/home" className="nav-item active">
+          <img src="/Home Selected.png" alt="Home" className="nav-icon" />
+          <p className="nav-text">Home</p>
+        </Link>
+        <Link to="/favorites" className="nav-item">
+          <img src="/Favorites.png" alt="Favorites" className="nav-icon" />
+          <p className="nav-text">Favorites</p>
+        </Link>
+        <Link to="/settings" className="nav-item">
+          <img src="/Settings.png" alt="Account" className="nav-icon" />
+          <p className="nav-text">Account</p>
+        </Link>
+      </div>
     </div>
   );
 }
