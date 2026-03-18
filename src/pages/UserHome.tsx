@@ -1,95 +1,79 @@
 // src/pages/UserHome.tsx
+import { MapContainer, TileLayer, Marker, useMap, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import "./UserHome.css";
 import { Link } from "react-router-dom";
 
+// for pulse marker
+const createPulseIcon = (color: string) => {
+  return L.divIcon({
+    html: `<div class="pulse-marker" style="background-color: ${color};"></div>`,
+    className: 'custom-div-icon',
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  });
+};
+
 export default function UserHomePage() {
-  const handleClick = (name: string) => alert(`${name} clicked!`);
+
+  // Center of Cebu 
+  const center: [number, number] = [10.3223, 123.8982];
+
+  //Mock data for Areas (replace with api call later)
+  const areas = [
+    { id: 1, name: "IT Park", pos: [10.3280, 123.9055], density: "High", color: "#d32f2f" },
+    { id: 2, name: "Fuente Circle", pos: [10.3103, 123.8935], density: "Low", color: "#388e3c" }
+  ];
 
   return (
     <div className="user-home-page">
-      {/* Background */}
-      <img src="/Image2.png" className="background-image" alt="Background" />
+      {/* Header Section */}
+      <header className="home-header">
+        <h1 className="welcome-title">CrowdLens</h1>
+        <p className="welcome-subtitle">Welcome back, Khing</p>
+      </header>
 
-      {/* Welcome text */}
-      <p className="welcome-text">Welcome back, User!</p>
-
-      {/* Info Cards */}
-      <div className="info-card" style={{ top: 171, left: 29 }}></div>
-      <div className="info-card" style={{ top: 269, left: 29 }}></div>
-
-      {/* Map */}
-      <img src="/Map.png" alt="Map" className="map" />
-
-      {/* Labels (clickable) */}
-      <div
-        className="label"
-        style={{ top: 175, left: 39 }}
-        onClick={() => handleClick("Last Check-in Location")}
-      >
-        Last Check-in Location
-      </div>
-      <div
-        className="label"
-        style={{ top: 275, left: 39 }}
-        onClick={() => handleClick("Last Check-in Details")}
-      >
-        Last Check-in Details
-      </div>
-      <div
-        className="label"
-        style={{ top: 380, left: 39, zIndex: 10, position: "absolute" }}
-        onClick={() => handleClick("Pinned Locations")}
-      >
-        Pinned Locations
+      {/* Stats/Info Grid */}
+      <div className="stats-grid">
+        <div className="stat-card">
+          <span>Active Alerts</span>
+          <strong>3 Areas</strong>
+        </div>
+        <div className="stat-card">
+          <span>Last Check-in</span>
+          <strong>Downtown</strong>
+        </div>
       </div>
 
-      {/* Pins */}
-      <div
-        className="pin"
-        style={{ top: 550, left: 72 }}
-        onClick={() => handleClick("Pin 1")}
-      >
-        <img src="/Pin.png" alt="Pin 1" />
-      </div>
-      <div
-        className="pin"
-        style={{ top: 700, left: 186 }}
-        onClick={() => handleClick("Pin 2")}
-      >
-        <img src="/Pin.png" alt="Pin 2" />
-      </div>
-      <div
-        className="pin"
-        style={{ top: 439, left: 228 }}
-        onClick={() => handleClick("Pin 3")}
-      >
-        <img src="/Pin.png" alt="Pin 3" />
-      </div>
+      {/* Map Section */}
+      <main className="map-section">
+        <MapContainer center={center} zoom={14} className="main-map" style={{ height: "800px", width: "100%" }}> {/* Add this inline to be sure */}
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" // Clean grey map style
+            attribution='&copy; OpenStreetMap'
+          />
+          {areas.map(area => (
+            <Marker 
+              key={area.id} 
+              position={area.pos as [number, number]} 
+              icon={createPulseIcon(area.color)}
+            >
+              <Popup>
+                <strong>{area.name}</strong><br/>
+                Status: {area.density} Density
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+      </main>
 
-      {/* Zoom Button */}
-      <div
-        className="zoom-button"
-        style={{ top: 850, left: 430 }}
-        onClick={() => handleClick("Zoom Button")}
-      >
-        <img src="/ZoomButton.png" alt="Zoom" />
-      </div>
-
-      {/* Bottom navigation */}
-      <div className="bottom-nav">
-        <Link to="/" className="nav-item active">
-          <img src="/Home.png" alt="Home" className="nav-icon" />
-          <p className="nav-text">Home</p>
-        </Link>
-        <Link to="/favorites" className="nav-item">
-          <img src="/Favorites.png" alt="Favorites" className="nav-icon" />
-          <p className="nav-text">Favorites</p>
-        </Link>
-        <Link to="/settings" className="nav-item">
-          <img src="/Settings.png" alt="Account" className="nav-icon" />
-          <p className="nav-text">Account</p>
-        </Link>
-      </div>
+      {/* Bottom Navigation (Icon-less or using Emoji/Text) */}
+      <nav className="bottom-nav">
+        <button className="nav-btn active">Home</button>
+        <button className="nav-btn">Forecast</button>
+        <button className="nav-btn">Account</button>
+      </nav>
     </div>
   );
 }
