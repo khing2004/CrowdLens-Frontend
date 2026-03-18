@@ -106,7 +106,7 @@ export default function Register() {
 
         <p className="login-text">
           Already have an account?{" "}
-          <Link to="/" className="login-link">Log In</Link>
+          <Link to="/login" className="login-link">Log In</Link>
         </p>
       </div>
     </div>
