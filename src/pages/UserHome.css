@@ -1,91 +1,48 @@
-/* UserHome page */
+/*UserHome.css*/
+/* Container and Typography */
 .user-home-page {
-  position: relative;
-  min-width: 360px;
-  min-height: 100vh; 
-  width: 100%;
-  background: whitesmoke; 
-  font-family: 'Inter', Arial, sans-serif;
-}
-
-/* Background */
-.background-image {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%; 
-  width: 540px; 
-  object-fit: cover;
-}
-
-/* Welcome text */
-.welcome-text {
-  position: absolute;
-  top: 75px;
-  left: 32px;
-  width: 400px;
-  font-weight: bold;
-  font-size: 32px;
-  text-align: center;
-  color: #000000b0;
-}
-
-/* Info cards */
-.info-card {
-  position: absolute;
-  width: 445px;
-  height: 89px;
-  background: white;
-  border-radius: 15px;
-  box-shadow: 0px 2px 4px #00000029;
-}
-
-/* Labels */
-.label {
-  position: absolute;
-  font-size: 30px;
-  color: #7c7c7c;
-  font-weight: 600;
-}
-
-/* Map */
-.map {
-  position: absolute;
-  top: 375px;
-  left: 30px;
-  width: 450px;
-  height: 550px;
-  object-fit: cover;
-}
-
-/* Pins */
-.pin {
-  position: absolute;
-  width: 55px;
-  height: 55px;
-  object-fit: contain;
-}
-
-/* Zoom button */
-.zoom-button {
-  position: absolute;
-  width: 30px;
-  height: 60px;
-  object-fit: contain;
-}
-
-/* Bottom nav */
-.bottom-nav {
-  position: absolute;
-  bottom: 0;
-  width: 540px;
   display: flex;
-  justify-content: space-around;
-  background: #f3edf7;
-  padding: 10px 0;
+  flex-direction: column;
+  min-height: 100vh;
+  background: url('/Image2.png');
+  background-repeat: no-repeat;
+  background-size: cover;
+  font-family: 'Inter', sans-serif;
+  color: #2d3436;
 }
 
-.nav-item {
+/* Header */
+.home-header {
+  padding: 40px 20px 20px;
+  text-align: left;
+}
+
+.welcome-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #30924C; /* Your brand green */
+  margin: 0;
+}
+
+.welcome-subtitle {
+  font-size: 16px;
+  color: #636e72;
+}
+
+/* Info Cards */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  padding: 0 20px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: white;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.01);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -95,47 +52,62 @@
   height: 36px;
 }
 
-.nav-text {
-  font-size: 14px;
-  color: #49454f;
+.stat-card span { font-size: 12px; color: #b2bec3; }
+.stat-card strong { font-size: 14px; margin-top: 5px; }
+
+/* Map Styling */
+.map-section {
+  flex: 1; /* This tells it to take up all available space */
+  min-height: 400px; /* Essential: Gives the map a starting height */
+  margin: 0 20px 100px;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 4px solid white;
+  position: relative; /* Helps Leaflet calculate bounds */
 }
 
-.nav-item.active .nav-text {
-  color: #625b71;
-}
-
-button {
-  border: none;
-  background: none;
-  padding: 0;
-  margin: 0;
-  cursor: pointer;
-  outline: none; 
-}
-
-button:focus {
-  outline: none; 
-}
-
-/* Pins and Zoom Button images fit their containers */
-.pin img,
-.zoom-button img {
-  display: block;
-  width: 100%;
+.main-map {
   height: 100%;
+  width: 100%;
 }
 
-/* Labels as buttons, keep text style */
-.label {
+/* Custom Marker CSS */
+.pulse-marker {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid white;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(3); opacity: 0; }
+}
+
+.custom-div-icon { background: transparent; border: none; }
+
+/* Bottom Nav */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: 70px;
+  background: white;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
+}
+
+.nav-btn {
   background: none;
   border: none;
+  font-weight: 600;
+  color: #b2bec3;
   cursor: pointer;
-  font-size: 13px; 
-  color: #7c7c7c;  
-  font-weight: 500;
-  padding: 0;
 }
 
-.label:hover {
-  text-decoration: underline; 
+.nav-btn.active {
+  color: #30924C;
 }
