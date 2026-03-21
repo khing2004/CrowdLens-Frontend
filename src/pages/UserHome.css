@@ -48,9 +48,6 @@
   align-items: center;
   text-decoration: none; 
 }
-.nav-icon {
-  height: 36px;
-}
 
 .stat-card span { font-size: 12px; color: #b2bec3; }
 .stat-card strong { font-size: 14px; margin-top: 5px; }
@@ -89,6 +86,7 @@
 
 /* Bottom Nav */
 .bottom-nav {
+  z-index: 1000; /* Ensures it stays above the map */
   position: fixed;
   bottom: 0;
   width: 100%;
@@ -110,4 +108,43 @@
 
 .nav-btn.active {
   color: #30924C;
+}
+
+.nav-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;  /* Adds consistent spacing between icon and text */
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nav-icon {
+  height: 36px;
+  width: 36px;
+  object-fit: contain;
+}
+
+.nav-item,
+.nav-item:link,
+.nav-item:visited,
+.nav-item:hover,
+.nav-item:active {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nav-item {
+  font-size: 12px;
+  margin: 0;
+  text-align: center;
+  width: 100%;
+}
+
+.nav-text {
+  font-size: 12px;
+  margin: 0;
+  text-align: center;
+  width: 100%;
 }

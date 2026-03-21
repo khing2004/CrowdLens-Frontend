@@ -9,21 +9,32 @@ import { Link } from "react-router-dom";
 const createPulseIcon = (color: string) => {
   return L.divIcon({
     html: `<div class="pulse-marker" style="background-color: ${color};"></div>`,
-    className: 'custom-div-icon',
+    className: "custom-div-icon",
     iconSize: [20, 20],
-    iconAnchor: [10, 10]
+    iconAnchor: [10, 10],
   });
 };
 
 export default function UserHomePage() {
-
-  // Center of Cebu 
+  // Center of Cebu
   const center: [number, number] = [10.3223, 123.8982];
 
   //Mock data for Areas (replace with api call later)
   const areas = [
-    { id: 1, name: "IT Park", pos: [10.3280, 123.9055], density: "High", color: "#d32f2f" },
-    { id: 2, name: "Fuente Circle", pos: [10.3103, 123.8935], density: "Low", color: "#388e3c" }
+    {
+      id: 1,
+      name: "IT Park",
+      pos: [10.328, 123.9055],
+      density: "High",
+      color: "#d32f2f",
+    },
+    {
+      id: 2,
+      name: "Fuente Circle",
+      pos: [10.3103, 123.8935],
+      density: "Low",
+      color: "#388e3c",
+    },
   ];
 
   return (
@@ -48,19 +59,27 @@ export default function UserHomePage() {
 
       {/* Map Section */}
       <main className="map-section">
-        <MapContainer center={center} zoom={14} className="main-map" style={{ height: "800px", width: "100%" }}> {/* Add this inline to be sure */}
+        <MapContainer
+          center={center}
+          zoom={14}
+          className="main-map"
+          style={{ height: "800px", width: "100%" }}
+        >
+          {" "}
+          {/* Add this inline to be sure */}
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" // Clean grey map style
-            attribution='&copy; OpenStreetMap'
+            attribution="&copy; OpenStreetMap"
           />
-          {areas.map(area => (
-            <Marker 
-              key={area.id} 
-              position={area.pos as [number, number]} 
+          {areas.map((area) => (
+            <Marker
+              key={area.id}
+              position={area.pos as [number, number]}
               icon={createPulseIcon(area.color)}
             >
               <Popup>
-                <strong>{area.name}</strong><br/>
+                <strong>{area.name}</strong>
+                <br />
                 Status: {area.density} Density
               </Popup>
             </Marker>
@@ -70,18 +89,25 @@ export default function UserHomePage() {
 
       {/* Bottom navigation */}
       <div className="bottom-nav">
-        <Link to="/home" className="nav-item active">
-          <img src="/Home Selected.png" alt="Home" className="nav-icon" />
-          <p className="nav-text">Home</p>
-        </Link>
-        <Link to="/favorites" className="nav-item">
-          <img src="/Favorites.png" alt="Favorites" className="nav-icon" />
-          <p className="nav-text">Favorites</p>
-        </Link>
-        <Link to="/settings" className="nav-item">
-          <img src="/Settings.png" alt="Account" className="nav-icon" />
-          <p className="nav-text">Account</p>
-        </Link>
+        <div className="nav-section">
+          <Link to="/home" className="nav-item">
+            <img src="/Home Selected.png" alt="Home" className="nav-icon" />
+            <p className="nav-text">Home</p>
+          </Link>
+        </div>
+
+        <div className="nav-section">
+          <Link to="/favorites" className="nav-item">
+            <img src="/Favorites.png" alt="Favorites" className="nav-icon" />
+            <p className="nav-text">Favorites</p>
+          </Link>
+        </div>
+        <div className="nav-section">
+          <Link to="/settings" className="nav-item">
+            <img src="/Settings.png" alt="Account" className="nav-icon" />
+            <p className="nav-text">Account</p>
+          </Link>
+        </div>
       </div>
     </div>
   );
