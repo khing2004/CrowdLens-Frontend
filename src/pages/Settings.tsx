@@ -4,38 +4,49 @@ import { Link } from "react-router-dom";
 export default function Settings() {
   return (
     <div className="user-home-page">
-      {/* Background */}
-      <img src="/Image2.png" className="background-image" alt="Background" />
-
       <p className="page-label">Account Settings</p>
 
-      <div></div>
+      <div className="user-info">
+        <p className="username">test</p>
+        <p className="email">test@example.com</p>
+      </div>
 
-      <ul>
-        <li>
-          <a href="https://google.com" className="no-color-link">
-            Test
-          </a>
-        </li>
-      </ul>
+      <div>
+        <ul className="settings-options">
+          {/* Change to links/buttons */}
+          <li className="settings-option">Profile</li>
+          <li className="settings-option">Location Sharing</li>
+          <li className="settings-option">Notifications</li>
+          <li className="settings-option">Privacy Policy</li>
+          <li className="settings-option">Terms of Service</li>
+          <li className="settings-option">Logout</li>
+        </ul>
+      </div>
 
       <div className="bottom-nav">
-        <Link to="/home" className="nav-item">
-          <img src="/Home.png" alt="Home" className="nav-icon" />
-          <p className="nav-text">Home</p>
-        </Link>
-        <Link to="/favorites" className="nav-item">
-          <img src="/Favorites.png" alt="Favorites" className="nav-icon" />
-          <p className="nav-text">Favorites</p>
-        </Link>
-        <Link to="/settings" className="nav-item active">
-          <img
-            src="/Settings Selected.png"
-            alt="Account"
-            className="nav-icon"
-          />
-          <p className="nav-text">Account</p>
-        </Link>
+        <div className="nav-section">
+          <Link to="/home" className="nav-item">
+            <img src="/Home.png" alt="Home" className="nav-icon" />
+            <p className="nav-text">Home</p>
+          </Link>
+        </div>
+
+        <div className="nav-section">
+          <Link to="/favorites" className="nav-item">
+            <img src="/Favorites.png" alt="Favorites" className="nav-icon" />
+            <p className="nav-text">Favorites</p>
+          </Link>
+        </div>
+        <div className="nav-section">
+          <Link to="/settings" className="nav-item active">
+            <img
+              src="/Settings Selected.png"
+              alt="Account"
+              className="nav-icon"
+            />
+            <p className="nav-text">Account</p>
+          </Link>
+        </div>
       </div>
     </div>
   );
