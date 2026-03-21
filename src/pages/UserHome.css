@@ -104,6 +104,15 @@
   box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
 }
 
+.nav-btn {
+  background: none;
+  border: none;
+}
+
+.nav-btn.active {
+  color: #30924C;
+}
+
 .nav-section {
   display: flex;
   flex-direction: column;
