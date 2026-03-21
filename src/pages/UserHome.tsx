@@ -1,13 +1,14 @@
 // src/pages/UserHome.tsx
 import { MapContainer, TileLayer, Marker, useMap, Popup } from "react-leaflet";
-import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./UserHome.css";
+import "../components/CustomPopup.css"
 import { Link } from "react-router-dom";
-import AreaModal from "../components/AreaModal"; // components folder has reusable components which can be used at any page.
 import { useState, useEffect } from "react";
+import { densityClasses, getIconByDensity } from "../utils/crowdHelper";
+import { Bookmark } from 'lucide-react';
 
-// Helper component to handle programmatic panning
+// helper component to handle programmatic panning
 function RecenterAutomatically({ location }: { location: any }) {
   const map = useMap();
   useEffect(() => {
@@ -21,35 +22,10 @@ function RecenterAutomatically({ location }: { location: any }) {
   return null;
 }
 
-// for pulse marker
-const createPulseIcon = (color: string) => {
-  return L.divIcon({
-    html: `<div class="pulse-marker" style="background-color: ${color};"></div>`,
-    className: 'custom-div-icon',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
-  });
-};
-
-const densityClasses: Record<string, string> = {
-  "High": "high",
-  "Medium": "medium",
-  "Low": "low"
-};
-
 export default function UserHomePage() {
 
-  
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
 
-
-  const getIconByDensity = (density: string) => {
-    if (density == "High") return createPulseIcon("#d32f2f");
-    if (density == "Medium") return createPulseIcon("#f57c00");
-    return createPulseIcon("#388e3c");
-
-  }
   // Center of Cebu 
   const center: [number, number] = [10.3223, 123.8982];
 
@@ -122,24 +98,38 @@ export default function UserHomePage() {
               <Popup className="custom-popup">
                 <div className="popup-container">
                   <div className="popup-header">
+                    <div className="badge-wrapper">
+                      <p style={{ fontSize: '12px', color: '#30924C', fontWeight: 'bold', margin: '0 0 4px 0', textTransform: 'uppercase' }}>
+                        {location.type}
+                      </p>
+                      <button className="save-link-btn">
+                          <Bookmark/>
+                        </button>
+                      </div>
                     <div className="title-row">
-                      <span className="star-icon">☆</span>
                       <h2>{location.name}</h2>
                     </div>
+                   
                     <div className="status-row">
-                      <span className={`badge ${densityClasses[location.density]}`}>● {location.density} Crowd Level</span>
-                      <span className="updated-text">    Updated 2 minutes ago.</span>
+                      <div className="badge-wrapper">
+                        <span className={`badge ${densityClasses[location.density]}`}>
+                          ● {location.density} Crowd Level
+                        </span>
+                        <span className="updated-text">Updated {location.lastUpdated}</span>
+                      </div>
                     </div>
-                    <p className="quieter-nearby">Quieter Nearby: Lahug Area (Light Crowd)</p>
+                    <p className="quieter-nearby">
+                      <strong>Tip:</strong> Lahug Area is currently quieter.
+                    </p>
                   </div>
 
                   <div className="congestion-info">
-                    <h3>Peak Lunchtime Congestion</h3>
-                    <p>Most establishments are busy. Expect 10-20 minute waits and limited seating availability.</p>
+                    <h3>Live Insights</h3>
+                    <p>Based on connection data, wait times are approximately 10-20 minutes.</p>
                   </div>
 
                   <button className="input-btn">
-                    <span className="plus-icon">+</span> Input Crowd Level
+                    <span>+</span> Input Crowd Level
                   </button>
                 </div>
               </Popup>

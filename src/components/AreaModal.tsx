@@ -10,7 +10,7 @@ interface AreaModalProps {
   onInputClick?: () => void; // Optional action for the green button
 }
 
-export default function useAreaModal({ 
+export default function AreaModal({ 
   isOpen, 
   onClose, 
   name, 
