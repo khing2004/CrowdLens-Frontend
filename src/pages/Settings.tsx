@@ -7,21 +7,20 @@ export default function Settings() {
       <p className="page-label">Account Settings</p>
 
       <div className="user-info">
+        <img src="/Logo.png" alt="Profile" className="profile-picture" />
         <p className="username">test</p>
         <p className="email">test@example.com</p>
       </div>
 
-      <div>
-        <ul className="settings-options">
-          {/* Change to links/buttons */}
-          <li className="settings-option">Profile</li>
-          <li className="settings-option">Location Sharing</li>
-          <li className="settings-option">Notifications</li>
-          <li className="settings-option">Privacy Policy</li>
-          <li className="settings-option">Terms of Service</li>
-          <li className="settings-option">Logout</li>
-        </ul>
-      </div>
+      <ul className="settings-options">
+        {/* Change to links/buttons */}
+        <li className="settings-option">Profile</li>
+        <li className="settings-option">Location Sharing</li>
+        <li className="settings-option">Notifications</li>
+        <li className="settings-option">Privacy Policy</li>
+        <li className="settings-option">Terms of Service</li>
+        <li className="settings-option">Logout</li>
+      </ul>
 
       <div className="bottom-nav">
         <div className="nav-section">
