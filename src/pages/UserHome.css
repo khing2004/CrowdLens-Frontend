@@ -91,6 +91,7 @@
 
 /* Bottom Nav */
 .bottom-nav {
+  z-index: 1000; /* Ensures it stays above the map */
   position: fixed;
   bottom: 0;
   width: 100%;
