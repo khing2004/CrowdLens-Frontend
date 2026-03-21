@@ -14,12 +14,36 @@ export default function Settings() {
 
       <ul className="settings-options">
         {/* Change to links/buttons */}
-        <li className="settings-option">Profile</li>
-        <li className="settings-option">Location Sharing</li>
-        <li className="settings-option">Notifications</li>
-        <li className="settings-option">Privacy Policy</li>
-        <li className="settings-option">Terms of Service</li>
-        <li className="settings-option">Logout</li>
+        <li className="settings-option">
+          <a href="#" onClick={(e) => e.preventDefault()}>
+            Profile
+          </a>
+        </li>
+        <li className="settings-option">
+          <a href="#" onClick={(e) => e.preventDefault()}>
+            Location Sharing
+          </a>
+        </li>
+        <li className="settings-option">
+          <a href="#" onClick={(e) => e.preventDefault()}>
+            Notifications
+          </a>
+        </li>
+        <li className="settings-option">
+          <a href="#" onClick={(e) => e.preventDefault()}>
+            Privacy Policy
+          </a>
+        </li>
+        <li className="settings-option">
+          <a href="#" onClick={(e) => e.preventDefault()}>
+            Terms of Service
+          </a>
+        </li>
+        <li className="settings-option">
+          <a href="#" onClick={(e) => e.preventDefault()}>
+            Logout
+          </a>
+        </li>
       </ul>
 
       <div className="bottom-nav">
