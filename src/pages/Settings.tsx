@@ -12,6 +12,14 @@ export default function Settings() {
         <p className="email">test@example.com</p>
       </div>
 
+      <div className="bio">
+        <h2>Bio</h2>
+        <p className="bio-text">
+          This is a sample bio for the user. It can be edited in the profile
+          settings.
+        </p>
+      </div>
+
       <ul className="settings-options">
         {/* Change to links/buttons */}
         <li className="settings-option">
