@@ -37,7 +37,7 @@ export default function Settings() {
           </Link>
         </div>
         <div className="nav-section">
-          <Link to="/settings" className="nav-item active">
+          <Link to="/settings" className="nav-item">
             <img
               src="/Settings Selected.png"
               alt="Account"
