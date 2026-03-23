@@ -2,10 +2,11 @@
 import { MapContainer, TileLayer, Marker, useMap, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "./UserHome.css";
-import "../components/CustomPopup.css"
+import "../components/Home/CustomPopup.css"
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { densityClasses, getIconByDensity } from "../utils/crowdHelper";
+import ReportModal from "../components/Home/ReportModal";
 import { Bookmark } from 'lucide-react';
 
 // helper component to handle panning
@@ -22,9 +23,18 @@ function RecenterAutomatically({ location }: { location: any }) {
   return null;
 }
 
-export default function UserHomePage() {
 
+export default function UserHomePage() {
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
+
+
+  const handleReportSubmit = (level: string) => {
+    console.log(`Reporting ${level} for ${selectedLocation.name}`);
+    // In your special problem, this will be an API call to your backend
+    alert("Thank you for your report!");
+    setIsReportModalOpen(false);
+  };
 
   // Center of Cebu 
   const center: [number, number] = [10.3223, 123.8982];
@@ -135,7 +145,13 @@ export default function UserHomePage() {
                     <p>Based on connection data, wait times are approximately 10-20 minutes.</p>
                   </div>
 
-                  <button className="input-btn">
+                  <button className="input-btn" onClick={
+                    (e) => {
+                      e.stopPropagation();
+                      setIsReportModalOpen(true);
+                      console.log("Modal should be open now.");
+                      }}
+                  >
                     <span>+</span> Input Crowd Level
                   </button>
                 </div>
@@ -167,6 +183,12 @@ export default function UserHomePage() {
           </Link>
         </div>
       </div>
+      <ReportModal 
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        locationName={selectedLocation?.name || ""}
+        onSubmit={handleReportSubmit}
+      />
     </div>
   );
 }

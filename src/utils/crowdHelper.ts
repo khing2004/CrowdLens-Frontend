@@ -18,6 +18,7 @@ export const getIconByDensity = (density: string) => {
   return createPulseIcon("#388e3c");
 };
 
+// used in UserHome.tsx
 export const densityClasses: Record<string, string> = {
   "High": "high",
   "Medium": "medium",
