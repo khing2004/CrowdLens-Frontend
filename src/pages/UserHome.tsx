@@ -8,12 +8,12 @@ import { useState, useEffect } from "react";
 import { densityClasses, getIconByDensity } from "../utils/crowdHelper";
 import { Bookmark } from 'lucide-react';
 
-// helper component to handle programmatic panning
+// helper component to handle panning
 function RecenterAutomatically({ location }: { location: any }) {
   const map = useMap();
   useEffect(() => {
     if (location) {
-      map.flyTo(location.pos, 16, {
+      map.flyTo(location.pos, 18, {
         animate: true,
         duration: 0.7, // Smooth pan duration in seconds
       });
