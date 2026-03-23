@@ -1,41 +1,66 @@
 // src/pages/UserHome.tsx
 import { MapContainer, TileLayer, Marker, useMap, Popup } from "react-leaflet";
-import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./UserHome.css";
+import "../components/Home/CustomPopup.css"
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { densityClasses, getIconByDensity } from "../utils/crowdHelper";
+import ReportModal from "../components/Home/ReportModal";
+import { Bookmark } from 'lucide-react';
 
-// for pulse marker
-const createPulseIcon = (color: string) => {
-  return L.divIcon({
-    html: `<div class="pulse-marker" style="background-color: ${color};"></div>`,
-    className: "custom-div-icon",
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
-  });
-};
+// helper component to handle panning
+function RecenterAutomatically({ location }: { location: any }) {
+  const map = useMap();
+  useEffect(() => {
+    if (location) {
+      map.flyTo(location.pos, 18, {
+        animate: true,
+        duration: 0.7, // Smooth pan duration in seconds
+      });
+    }
+  }, [location, map]);  
+  return null;
+}
+
 
 export default function UserHomePage() {
-  // Center of Cebu
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<any>(null);
+
+
+  const handleReportSubmit = (level: string) => {
+    console.log(`Reporting ${level} for ${selectedLocation.name}`);
+    // In your special problem, this will be an API call to your backend
+    alert("Thank you for your report!");
+    setIsReportModalOpen(false);
+  };
+
+  // Center of Cebu 
   const center: [number, number] = [10.3223, 123.8982];
 
   //Mock data for Areas (replace with api call later)
-  const areas = [
-    {
-      id: 1,
-      name: "IT Park",
-      pos: [10.328, 123.9055],
-      density: "High",
-      color: "#d32f2f",
-    },
-    {
-      id: 2,
-      name: "Fuente Circle",
-      pos: [10.3103, 123.8935],
-      density: "Low",
-      color: "#388e3c",
-    },
-  ];
+  const locations = [
+  { 
+    id: 1, 
+    name: "Cebu City Public Library", 
+    type: "Public Library",
+    pos: [10.3095, 123.8931], 
+    density: "Medium", 
+    lastUpdated: "5 mins ago" 
+    
+  },
+  { 
+    id: 2, 
+    name: "Vicente Sotto Medical Center", 
+    type: "Hospital",
+    pos: [10.3117, 123.8915], 
+    density: "High", 
+    lastUpdated: "2 mins ago" 
+  }
+
+  
+];
 
   return (
     <div className="user-home-page">
@@ -71,16 +96,65 @@ export default function UserHomePage() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" // Clean grey map style
             attribution="&copy; OpenStreetMap"
           />
-          {areas.map((area) => (
-            <Marker
-              key={area.id}
-              position={area.pos as [number, number]}
-              icon={createPulseIcon(area.color)}
+
+          {selectedLocation && (
+            <RecenterAutomatically 
+              location ={selectedLocation} 
+            />
+          )}
+
+          {locations.map(location => (
+            <Marker 
+              key={location.id} 
+              position={location.pos as [number, number]} 
+              icon={getIconByDensity(location.density)}
+              eventHandlers={{
+                click: () => setSelectedLocation(location)
+              }}
             >
-              <Popup>
-                <strong>{area.name}</strong>
-                <br />
-                Status: {area.density} Density
+              <Popup className="custom-popup">
+                <div className="popup-container">
+                  <div className="popup-header">
+                    <div className="badge-wrapper">
+                      <p style={{ fontSize: '12px', color: '#30924C', fontWeight: 'bold', margin: '0 0 4px 0', textTransform: 'uppercase' }}>
+                        {location.type}
+                      </p>
+                      <button className="save-link-btn">
+                          <Bookmark/>
+                        </button>
+                      </div>
+                    <div className="title-row">
+                      <h2>{location.name}</h2>
+                    </div>
+                   
+                    <div className="status-row">
+                      <div className="badge-wrapper">
+                        <span className={`badge ${densityClasses[location.density]}`}>
+                          ● {location.density} Crowd Level
+                        </span>
+                        <span className="updated-text">Updated {location.lastUpdated}</span>
+                      </div>
+                    </div>
+                    <p className="quieter-nearby">
+                      <strong>Tip:</strong> Lahug Area is currently quieter.
+                    </p>
+                  </div>
+
+                  <div className="congestion-info">
+                    <h3>Live Insights</h3>
+                    <p>Based on connection data, wait times are approximately 10-20 minutes.</p>
+                  </div>
+
+                  <button className="input-btn" onClick={
+                    (e) => {
+                      e.stopPropagation();
+                      setIsReportModalOpen(true);
+                      console.log("Modal should be open now.");
+                      }}
+                  >
+                    <span>+</span> Input Crowd Level
+                  </button>
+                </div>
               </Popup>
             </Marker>
           ))}
@@ -109,6 +183,12 @@ export default function UserHomePage() {
           </Link>
         </div>
       </div>
+      <ReportModal 
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        locationName={selectedLocation?.name || ""}
+        onSubmit={handleReportSubmit}
+      />
     </div>
   );
 }

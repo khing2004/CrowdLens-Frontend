@@ -57,10 +57,10 @@ export default function Register() {
   };
 
   // what are the different useStates? I noticed useState could go <> or () or [], what gives?
-  const handleCaptchaChange = (value: string | null) => {
+  /*const handleCaptchaChange = (value: string | null) => {
     console.log("Captcha value:", value);
     setCaptchaValue(value);
-  };  
+  }; */  
 
 
   return (
