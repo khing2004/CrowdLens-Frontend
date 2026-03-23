@@ -74,10 +74,17 @@ export default function UserHomePage() {
 
       {/* Map Section */}
       <main className="map-section">
-        <MapContainer center={center} zoom={14} className="main-map" style={{ height: "800px", width: "100%" }}> {/* Add this inline to be sure */}
+        <MapContainer
+          center={center}
+          zoom={14}
+          className="main-map"
+          style={{ height: "800px", width: "100%" }}
+        >
+          {" "}
+          {/* Add this inline to be sure */}
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" // Clean grey map style
-            attribution='&copy; OpenStreetMap'
+            attribution="&copy; OpenStreetMap"
           />
 
           {selectedLocation && (
@@ -140,18 +147,25 @@ export default function UserHomePage() {
 
       {/* Bottom navigation */}
       <div className="bottom-nav">
-        <Link to="/home" className="nav-item active">
-          <img src="/Home Selected.png" alt="Home" className="nav-icon" />
-          <p className="nav-text">Home</p>
-        </Link>
-        <Link to="/favorites" className="nav-item">
-          <img src="/Favorites.png" alt="Favorites" className="nav-icon" />
-          <p className="nav-text">Favorites</p>
-        </Link>
-        <Link to="/settings" className="nav-item">
-          <img src="/Settings.png" alt="Account" className="nav-icon" />
-          <p className="nav-text">Account</p>
-        </Link>
+        <div className="nav-section">
+          <Link to="/home" className="nav-item">
+            <img src="/Home Selected.png" alt="Home" className="nav-icon" />
+            <p className="nav-text">Home</p>
+          </Link>
+        </div>
+
+        <div className="nav-section">
+          <Link to="/favorites" className="nav-item">
+            <img src="/Favorites.png" alt="Favorites" className="nav-icon" />
+            <p className="nav-text">Favorites</p>
+          </Link>
+        </div>
+        <div className="nav-section">
+          <Link to="/settings" className="nav-item">
+            <img src="/Settings.png" alt="Account" className="nav-icon" />
+            <p className="nav-text">Account</p>
+          </Link>
+        </div>
       </div>
     </div>
   );
