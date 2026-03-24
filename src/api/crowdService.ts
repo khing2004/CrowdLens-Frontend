@@ -7,4 +7,5 @@ export const submitCrowdReport = async (locationId: number, level: string) => {
     crowdLevel: level,
     timestamp: new Date().toISOString()
   });
+  
 };

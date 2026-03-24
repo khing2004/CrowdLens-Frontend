@@ -8,6 +8,8 @@ import { useState, useEffect } from "react";
 import { densityClasses, getIconByDensity } from "../utils/crowdHelper";
 import ReportModal from "../components/Home/ReportModal";
 import { Bookmark } from 'lucide-react';
+import { authService } from "../api/authService";
+import type { CrowdLocation } from "../types/crowd";
 
 // helper component to handle panning
 function RecenterAutomatically({ location }: { location: any }) {
@@ -23,11 +25,31 @@ function RecenterAutomatically({ location }: { location: any }) {
   return null;
 }
 
-
 export default function UserHomePage() {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
+  const [locations, setLocations] = useState<CrowdLocation[]>([]);
+  const [loading, setLoading] = useState(true);
 
+
+
+  useEffect(() => {
+    const fetchMapData = async () => {
+      try {
+        const data = await authService.getLocations();
+        // Map the backend 'pos' (List<double>) to React's [number, number]
+        setLocations(data);
+      } catch (error) {
+        console.error("Failed to load map data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMapData();
+  }, []);
+
+  if (loading) {return <div className="loading-screen">Loading CrowdLens Map...</div>;}
 
   const handleReportSubmit = (level: string) => {
     console.log(`Reporting ${level} for ${selectedLocation.name}`);
@@ -38,42 +60,6 @@ export default function UserHomePage() {
 
   // Center of Cebu 
   const center: [number, number] = [10.3223, 123.8982];
-
-  //Mock data for Areas (replace with api call later)
-  const locations = [
-  { 
-    id: 1, 
-    name: "Cebu City Public Library", 
-    type: "Public Library",
-    pos: [10.3095, 123.8931], 
-    density: "Medium", 
-    lastUpdated: "5 mins ago",
-    votes: {
-      "Very Low": 0,
-      "Low": 1,
-      "Medium": 6,
-      "High": 2,
-      "Very High": 0
-    }
-  },
-  { 
-    id: 2, 
-    name: "Vicente Sotto Medical Center", 
-    type: "Hospital",
-    pos: [10.3117, 123.8915], 
-    density: "High", 
-    lastUpdated: "2 mins ago",
-    votes: {
-      "Very Low": 0,
-      "Low": 1,
-      "Medium": 6,
-      "High": 2,
-      "Very High": 0
-    }
-  }
-
-  
-];
 
   return (
     <div className="user-home-page">

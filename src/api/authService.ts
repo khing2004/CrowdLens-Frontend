@@ -10,6 +10,15 @@ const apiClient = axios.create({
 });
 // Why do we need content-type: application/json? what is this for? how does axios.create work? 
 
+// Interceptor: Automatically attach token to every request
+apiClient.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token'); //
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`; //
+    }
+    return config;
+});
+
 export const authService = {
     // Login method
     async login(email: string, password:string) {
@@ -31,6 +40,12 @@ export const authService = {
         birthDate: string;
     }) {
         const response = await apiClient.post('/api/Auth/register', userData);
+        return response.data;
+    },
+
+    // helper to fetch all locations for the map -- should be placed at crowdService.ts, but here lang sa for the meantime
+    async getLocations() {
+        const response = await apiClient.get('/api/Crowd/locations');
         return response.data;
     },
 
