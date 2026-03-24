@@ -4,16 +4,24 @@ import Login from "./pages/Login";
 import Forecast from "./pages/Forecast";
 import UserHomePage from "./pages/UserHome";
 import Settings from "./pages/Settings";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Login />} />
+        {/* Public Pages */}
+        <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/forecast" element={<Forecast />} />
-        <Route path="/home" element={<UserHomePage />} />
-        <Route path="/settings" element={<Settings />} />
+
+        {/* Private Pages */}
+        <Route element={<ProtectedRoute />}>
+    
+          <Route path="/forecast" element={<Forecast />} />
+          <Route path="/home" element={<UserHomePage />} />
+          <Route path="/settings" element={<Settings />} />
+        </Route>
+
       </Routes>
     </Router>
   );

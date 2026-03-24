@@ -1,7 +1,17 @@
 import "./Settings.css";
 import { Link } from "react-router-dom";
+import { authService } from "../api/authService";
+import { useNavigate } from "react-router-dom";
 
 export default function Settings() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    authService.logout();
+    navigate("/login");
+  };
+
+
   return (
     <div className="user-home-page">
       <p className="page-label">Account Settings</p>
@@ -48,9 +58,9 @@ export default function Settings() {
           </a>
         </li>
         <li className="settings-option">
-          <a href="#" onClick={(e) => e.preventDefault()}>
+          <button onClick={() => handleLogout()}>
             Logout
-          </a>
+          </button>
         </li>
       </ul>
 

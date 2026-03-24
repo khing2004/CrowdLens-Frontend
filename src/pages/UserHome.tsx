@@ -47,8 +47,14 @@ export default function UserHomePage() {
     type: "Public Library",
     pos: [10.3095, 123.8931], 
     density: "Medium", 
-    lastUpdated: "5 mins ago" 
-    
+    lastUpdated: "5 mins ago",
+    votes: {
+      "Very Low": 0,
+      "Low": 1,
+      "Medium": 6,
+      "High": 2,
+      "Very High": 0
+    }
   },
   { 
     id: 2, 
@@ -56,7 +62,14 @@ export default function UserHomePage() {
     type: "Hospital",
     pos: [10.3117, 123.8915], 
     density: "High", 
-    lastUpdated: "2 mins ago" 
+    lastUpdated: "2 mins ago",
+    votes: {
+      "Very Low": 0,
+      "Low": 1,
+      "Medium": 6,
+      "High": 2,
+      "Very High": 0
+    }
   }
 
   

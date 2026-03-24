@@ -17,6 +17,8 @@ export const authService = {
         if (response.data.token){ //how are we able to access data.token?
             localStorage.setItem('token', response.data.token); // what does setItem do? is localStorage enough for a scalable website? can it support many users?
         }
+
+        console.log("Token received.")
         return response.data;
     },
 
@@ -35,6 +37,7 @@ export const authService = {
     // for log out
     logout() {
         localStorage.removeItem('token');
+        console.log("token removed, logged out.")
     },
 
     getToken(){

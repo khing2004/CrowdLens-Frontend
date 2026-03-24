@@ -18,6 +18,13 @@ export interface CrowdLocation {
   pos: [number, number]; // [latitude, longitude]
   density: DensityLevel;
   lastUpdated: string;
+  votes: {
+    "Very Low": number;
+    "Low": number;
+    "Medium": number;
+    "High": number;
+    "Very High": number;
+  };
 }
 
 // used in ReportModal.tsx
