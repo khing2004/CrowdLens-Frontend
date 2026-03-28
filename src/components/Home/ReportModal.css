@@ -10,7 +10,7 @@
   align-items: center;
   
   /* CRITICAL: Must be higher than Leaflet (which is ~1000) */
-  z-index: 9999; 
+  z-index: 1500; 
 }
 
 .close-x {

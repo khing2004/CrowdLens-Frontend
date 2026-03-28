@@ -1,5 +1,5 @@
 // Define specific union types for better IDE autocompletion
-export type DensityLevel = "Very High" | "High" | "Medium" | "Low" | "Very Low";
+export type density = "Very High" | "High" | "Medium" | "Low" | "Very Low";
 
 // used in ReportModals as options
 export const Options = [
@@ -16,12 +16,12 @@ export interface CrowdLocation {
   name: string;
   type: string; // e.g., "Public Library", "Hospital"
   pos: [number, number]; // [latitude, longitude]
-  densityLevel: DensityLevel;
+  density: density;
   lastUpdated: string;
   votes: {
     "Very Low": number;
     "Low": number;
-    "Moderate": number;
+    "Medium": number;
     "High": number;
     "Very High": number;
   };

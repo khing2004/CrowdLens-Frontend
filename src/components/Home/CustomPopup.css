@@ -143,9 +143,11 @@
   transform: scale(1.2);
 }
 
+.badge.very-high { background: #fee2e2; color: #711111; }
 .badge.high { background: #fee2e2; color: #dc2626; }
-.badge.medium { background: #fef3c7; color: #d97706; }
+.badge.moderate { background: #fef3c7; color: #d97706; }
 .badge.low { background: #dcfce7; color: #16a34a; }
+.badge.very-low { background: #f0f9ff; color: #72ed72; }
 
 .updated-text {
   font-size: 8px;

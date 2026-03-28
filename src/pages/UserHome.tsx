@@ -10,6 +10,7 @@ import ReportModal from "../components/Home/ReportModal";
 import { Bookmark } from 'lucide-react';
 import type { CrowdLocation } from "../types/crowd";
 import { submitCrowdReport, getLocations } from "../api/crowdService";
+import ConfirmReportModal from "../components/Home/ConfirmReportModal";
 
 
 // helper component to handle panning
@@ -31,7 +32,8 @@ export default function UserHomePage() {
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
   const [locations, setLocations] = useState<CrowdLocation[]>([]);
   const [loading, setLoading] = useState(true);
-  
+  const [pendingLevel, setPendingLevel] = useState<string | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);  
 
   useEffect(() => {
     const fetchMapData = async () => {
@@ -51,32 +53,35 @@ export default function UserHomePage() {
 
   if (loading) {return <div className="loading-screen">Loading CrowdLens Map...</div>;}
 
-  const handleReportSubmit = async (level: string) => {
-    if (!selectedLocation) return;
-
-    try {
-      console.log(`Report level ${level} for location ID ${selectedLocation.id}`);
-      // send to backend
-      await submitCrowdReport(selectedLocation.id, level);
-
-      // show confirmation and feedback
-      alert(`Thank you! You reported ${level} for ${selectedLocation.name}`);
-      setIsReportModalOpen(false);
-      
-      // refresh data to see the new vote count
-      const updatedData = await getLocations();
-      setLocations(updatedData);
-
-    } catch (error: any) {
-      // If the backend returns the "15 minutes" message, show it to the user
-      if (error.response && error.response.status === 400) {
-        alert(error.response.data); 
-      } else {
-        alert("An error occurred while submitting your report.");
-    }
-    }
+  const handleInitialSelect = (level: string) => {
+    setPendingLevel(level);
+    setIsConfirmOpen(true);
   };
 
+  const handleFinalConfirm = async () => {
+    if (!selectedLocation || !pendingLevel) return;
+    
+    console.log(`Report level ${pendingLevel} for location ID ${selectedLocation.id}`);
+
+    try {
+      await submitCrowdReport(selectedLocation.id, pendingLevel);
+      alert(`Thank you! You reported ${pendingLevel} for ${selectedLocation.name}`);
+      
+      // Close everything
+      setIsConfirmOpen(false);
+      setIsReportModalOpen(false);
+      
+      // Refresh map data
+      const updatedData = await getLocations();
+      setLocations(updatedData);
+    } catch (error: any) {
+      // Handle the 15-minute cooldown error from backend
+      if (error.response?.status === 400) {
+        alert(error.response.data);
+      }
+      setIsConfirmOpen(false);
+    }
+  };
   // Center of Cebu 
   const center: [number, number] = [10.3223, 123.8982];
 
@@ -125,7 +130,7 @@ export default function UserHomePage() {
             <Marker 
               key={location.id} 
               position={location.pos as [number, number]} 
-              icon={getIconByDensity(location.densityLevel)}
+              icon={getIconByDensity(location.density)}
               eventHandlers={{
                 click: () => setSelectedLocation(location)
               }}
@@ -147,10 +152,10 @@ export default function UserHomePage() {
                    
                     <div className="status-row">
                       <div className="badge-wrapper">
-                        <span className={`badge ${densityClasses[location.densityLevel]}`}>
-                          ● {location.densityLevel} Crowd Level
+                        <span className={`badge ${densityClasses[location.density]}`}>
+                          ● {location.density} Crowd Level
                         </span>
-                        <span className="updated-text">Updated {location.lastUpdated}</span>
+                        <span className="updated-text">{location.lastUpdated}</span>
                       </div>
                     </div>
                     <p className="quieter-nearby">
@@ -205,7 +210,14 @@ export default function UserHomePage() {
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
         locationName={selectedLocation?.name || ""}
-        onSubmit={handleReportSubmit}
+        onSubmit={handleInitialSelect} // trigger confirmation
+      />
+
+      <ConfirmReportModal 
+        isOpen={isConfirmOpen}
+        level={pendingLevel || ""}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleFinalConfirm} // Triggers the actual API call
       />
     </div>
   );
