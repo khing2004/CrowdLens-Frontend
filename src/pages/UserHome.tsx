@@ -8,8 +8,9 @@ import { useState, useEffect } from "react";
 import { densityClasses, getIconByDensity } from "../utils/crowdHelper";
 import ReportModal from "../components/Home/ReportModal";
 import { Bookmark } from 'lucide-react';
-import { authService } from "../api/authService";
 import type { CrowdLocation } from "../types/crowd";
+import { submitCrowdReport, getLocations } from "../api/crowdService";
+
 
 // helper component to handle panning
 function RecenterAutomatically({ location }: { location: any }) {
@@ -30,13 +31,12 @@ export default function UserHomePage() {
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
   const [locations, setLocations] = useState<CrowdLocation[]>([]);
   const [loading, setLoading] = useState(true);
-
-
+  
 
   useEffect(() => {
     const fetchMapData = async () => {
       try {
-        const data = await authService.getLocations();
+        const data = await getLocations();
         // Map the backend 'pos' (List<double>) to React's [number, number]
         setLocations(data);
       } catch (error) {
@@ -51,11 +51,30 @@ export default function UserHomePage() {
 
   if (loading) {return <div className="loading-screen">Loading CrowdLens Map...</div>;}
 
-  const handleReportSubmit = (level: string) => {
-    console.log(`Reporting ${level} for ${selectedLocation.name}`);
-    // In your special problem, this will be an API call to your backend
-    alert("Thank you for your report!");
-    setIsReportModalOpen(false);
+  const handleReportSubmit = async (level: string) => {
+    if (!selectedLocation) return;
+
+    try {
+      console.log(`Report level ${level} for location ID ${selectedLocation.id}`);
+      // send to backend
+      await submitCrowdReport(selectedLocation.id, level);
+
+      // show confirmation and feedback
+      alert(`Thank you! You reported ${level} for ${selectedLocation.name}`);
+      setIsReportModalOpen(false);
+      
+      // refresh data to see the new vote count
+      const updatedData = await getLocations();
+      setLocations(updatedData);
+
+    } catch (error: any) {
+      // If the backend returns the "15 minutes" message, show it to the user
+      if (error.response && error.response.status === 400) {
+        alert(error.response.data); 
+      } else {
+        alert("An error occurred while submitting your report.");
+    }
+    }
   };
 
   // Center of Cebu 
@@ -106,7 +125,7 @@ export default function UserHomePage() {
             <Marker 
               key={location.id} 
               position={location.pos as [number, number]} 
-              icon={getIconByDensity(location.density)}
+              icon={getIconByDensity(location.densityLevel)}
               eventHandlers={{
                 click: () => setSelectedLocation(location)
               }}
@@ -128,8 +147,8 @@ export default function UserHomePage() {
                    
                     <div className="status-row">
                       <div className="badge-wrapper">
-                        <span className={`badge ${densityClasses[location.density]}`}>
-                          ● {location.density} Crowd Level
+                        <span className={`badge ${densityClasses[location.densityLevel]}`}>
+                          ● {location.densityLevel} Crowd Level
                         </span>
                         <span className="updated-text">Updated {location.lastUpdated}</span>
                       </div>
@@ -191,3 +210,4 @@ export default function UserHomePage() {
     </div>
   );
 }
+

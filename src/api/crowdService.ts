@@ -1,11 +1,16 @@
-import axios from "axios";
+import { apiClient } from "./authService";
 
 export const submitCrowdReport = async (locationId: number, level: string) => {
-  // This is the "industry standard" place for this logic
-  return await axios.post("/api/reports", {
+  return await apiClient.post("http://localhost:5041/api/Crowd/report", {
     locationId,
-    crowdLevel: level,
+    SelectedLevel: level, //crowdlevel
     timestamp: new Date().toISOString()
   });
   
+};
+
+export const getLocations = async () => {
+  const response = await apiClient.get('/api/Crowd/locations');
+  console.log("Fetched locations:", response.data);
+  return response.data;
 };

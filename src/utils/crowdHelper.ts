@@ -12,15 +12,20 @@ export const createPulseIcon = (color: string) => {
 };
 
 // Used in UserHome.tsx
-export const getIconByDensity = (density: string) => {
-  if (density === "High") return createPulseIcon("#d32f2f");
-  if (density === "Medium") return createPulseIcon("#f57c00");
-  return createPulseIcon("#388e3c");
+export const getIconByDensity = (densityLevel: string) => {
+  if (densityLevel === "Very High") return createPulseIcon("#991b1b");
+  if (densityLevel === "High") return createPulseIcon("#d32f2f");
+  if (densityLevel === "Medium") return createPulseIcon("#f57c00");
+  if (densityLevel === "Low") return createPulseIcon("#84cc16");
+  if (densityLevel === "Very Low") return createPulseIcon("#15803d");
+  return createPulseIcon("#64748b");
 };
 
 // used in UserHome.tsx
 export const densityClasses: Record<string, string> = {
+  "Very High": "very-high",
   "High": "high",
   "Medium": "medium",
-  "Low": "low"
+  "Low": "low",
+  "Very Low": "very-low"
 };

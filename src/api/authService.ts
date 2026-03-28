@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-const apiClient = axios.create({
+export const apiClient = axios.create({
     baseURL: API_URL,
     headers: {
         'Content-Type': 'application/json',
@@ -40,12 +40,6 @@ export const authService = {
         birthDate: string;
     }) {
         const response = await apiClient.post('/api/Auth/register', userData);
-        return response.data;
-    },
-
-    // helper to fetch all locations for the map -- should be placed at crowdService.ts, but here lang sa for the meantime
-    async getLocations() {
-        const response = await apiClient.get('/api/Crowd/locations');
         return response.data;
     },
 

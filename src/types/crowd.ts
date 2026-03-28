@@ -5,7 +5,7 @@ export type DensityLevel = "Very High" | "High" | "Medium" | "Low" | "Very Low";
 export const Options = [
   { level: "Very Low", desc: "Plenty of space, no waiting time." },
   { level: "Low", desc: "A few people around, very comfortable." },
-  { level: "Medium", desc: "Moderate crowd, some waiting may occur." },
+  { level: "Moderate", desc: "Moderate crowd, some waiting may occur." },
   { level: "High", desc: "Crowded, limited seating and longer waits." },
   { level: "Very High", desc: "Extremely packed, avoid if possible." },
 ];
@@ -16,12 +16,12 @@ export interface CrowdLocation {
   name: string;
   type: string; // e.g., "Public Library", "Hospital"
   pos: [number, number]; // [latitude, longitude]
-  density: DensityLevel;
+  densityLevel: DensityLevel;
   lastUpdated: string;
   votes: {
     "Very Low": number;
     "Low": number;
-    "Medium": number;
+    "Moderate": number;
     "High": number;
     "Very High": number;
   };
