@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import Forecast from "./pages/Forecast";
 import UserHomePage from "./pages/UserHome";
 import Settings from "./pages/Settings";
+import Favorites from "./pages/Favorites";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/forecast" element={<Forecast />} />
         <Route path="/home" element={<UserHomePage />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/favorites" element={<Favorites />} />
       </Routes>
     </Router>
   );
