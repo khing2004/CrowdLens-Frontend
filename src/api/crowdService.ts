@@ -1,10 +1,17 @@
 import { apiClient } from "./authService";
 
-export const submitCrowdReport = async (locationId: number, level: string) => {
+export const submitCrowdReport = async (
+  locationId: number, 
+  level: string, 
+  latitude: number, 
+  longitude: number) => {
   return await apiClient.post("/api/Crowd/report", {
     locationId,
     SelectedLevel: level, //crowdlevel
-    timestamp: new Date().toISOString()
+    latitude,
+    longitude,
+    timestamp: new Date().toISOString(),
+
   });
   
 };

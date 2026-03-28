@@ -61,12 +61,18 @@ export default function UserHomePage() {
   const handleFinalConfirm = async () => {
     if (!selectedLocation || !pendingLevel) return;
     
-    console.log(`Report level ${pendingLevel} for location ID ${selectedLocation.id}`);
+    // Ask the browser for the user's current GPS coordinates
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        
+    console.log(`Report level ${pendingLevel} for location ID ${selectedLocation.id} at coordinates ${lat}, ${lng}`);
 
     try {
-      await submitCrowdReport(selectedLocation.id, pendingLevel);
+      await submitCrowdReport(selectedLocation.id, pendingLevel, lat, lng);
       alert(`Thank you! You reported ${pendingLevel} for ${selectedLocation.name}`);
-      
+      console.log("Report submitted successfully. You are at coordinates:", lat, lng);
       // Close everything
       setIsConfirmOpen(false);
       setIsReportModalOpen(false);
@@ -81,6 +87,11 @@ export default function UserHomePage() {
       }
       setIsConfirmOpen(false);
     }
+  },
+  (error) => {
+    alert("Unable to access your location. Please allow GPS access to submit a report.");
+    setIsConfirmOpen(false);
+  });
   };
   // Center of Cebu 
   const center: [number, number] = [10.3223, 123.8982];
@@ -222,4 +233,3 @@ export default function UserHomePage() {
     </div>
   );
 }
-
