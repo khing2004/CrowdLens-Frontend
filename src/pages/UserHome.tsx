@@ -5,7 +5,7 @@ import "./UserHome.css";
 import "../components/Home/CustomPopup.css"
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { densityClasses, getIconByDensity } from "../utils/crowdHelper";
+import { densityClasses, getIconByDensity, getWaitTime } from "../utils/crowdHelper";
 import ReportModal from "../components/Home/ReportModal";
 import { Bookmark } from 'lucide-react';
 import type { CrowdLocation } from "../types/crowd";
@@ -176,7 +176,7 @@ export default function UserHomePage() {
 
                   <div className="congestion-info">
                     <h3>Live Insights</h3>
-                    <p>Based on connection data, wait times are approximately 10-20 minutes.</p>
+                    <p>Based on connection data, wait times are approximately {getWaitTime(location.density)}.</p>
                   </div>
 
                   <button className="input-btn" onClick={

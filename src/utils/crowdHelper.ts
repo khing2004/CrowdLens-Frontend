@@ -29,3 +29,12 @@ export const densityClasses: Record<string, string> = {
   "Low": "low",
   "Very Low": "very-low"
 };
+
+export const getWaitTime = (density: string) => {
+  switch (density) {
+    case "Very High": return "30+ minutes";
+    case "High": return "15-25 minutes";
+    case "Medium": return "5-10 minutes";
+    default: return "less than 5 minutes";
+  }
+};
