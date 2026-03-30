@@ -85,6 +85,77 @@
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
 }
 
+.favorite-actions {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.create-report-btn,
+.delete-btn {
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: transform 0.14s ease, box-shadow 0.2s ease;
+}
+
+.create-report-btn {
+  background: #2a9d46;
+}
+
+.create-report-btn:hover,
+.delete-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.delete-btn {
+  background: #d64545;
+}
+
+.error-message {
+  color: #d60000;
+  font-size: 0.9rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.report-btn {
+  background: #2a9d46;
+}
+
+.report-btn:disabled {
+  background: #a2d8ae;
+  cursor: not-allowed;
+}
+
+.report-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.delete-btn {
+  background: #d64545;
+}
+
+.delete-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.error-message {
+  color: #d60000;
+  font-size: 0.9rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
 .favorite-card h3 {
   font-size: 1.1rem;
   margin: 0 0 6px;
