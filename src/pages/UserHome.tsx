@@ -27,7 +27,13 @@ function RecenterAutomatically({ location }: { location: any }) {
 export default function UserHomePage() {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
+  const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
 
+  const toggleFavorite = (id: number) => {
+    setFavoriteIds(prev =>
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
 
   const handleReportSubmit = (level: string) => {
     console.log(`Reporting ${level} for ${selectedLocation.name}`);
@@ -119,9 +125,20 @@ export default function UserHomePage() {
                       <p style={{ fontSize: '12px', color: '#30924C', fontWeight: 'bold', margin: '0 0 4px 0', textTransform: 'uppercase' }}>
                         {location.type}
                       </p>
-                      <button className="save-link-btn">
-                          <Bookmark/>
-                        </button>
+                      <button
+                        className="save-link-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(location.id);
+                        }}
+                      >
+                        <Bookmark
+                          size={18}
+                          fill={favoriteIds.includes(location.id) ? "#1f2937" : "none"}
+                          stroke="#1f2937"
+                          strokeWidth={2}
+                        />
+                      </button>
                       </div>
                     <div className="title-row">
                       <h2>{location.name}</h2>
