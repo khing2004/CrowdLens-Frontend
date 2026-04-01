@@ -12,13 +12,7 @@ type AvailableLocation = {
 };
 
 export default function ManageLocations() {
-  const navigate = useNavigate();
-  const [activePanel, setActivePanel] = useState<string | null>(null);
-  const [locationEnabled, setLocationEnabled] = useState(true);
-  const [pendingLocationEnabled, setPendingLocationEnabled] =
-    useState(locationEnabled);
-
-  const [locations, manageLocations] = useState<AvailableLocation[]>([
+  const [locations] = useState<AvailableLocation[]>([
     {
       id: 1,
       name: "Cebu City Public Library",
@@ -39,7 +33,7 @@ export default function ManageLocations() {
 
   return (
     <div className="manage-locations-page">
-      <h1>Manage Locations</h1>
+      <h1 className="page-label">Manage Locations</h1>
       <div className="favorites-list">
         {locations.length === 0 ? (
           <p className="empty-text">No locations added yet.</p>
@@ -56,6 +50,12 @@ export default function ManageLocations() {
             </div>
           ))
         )}
+      </div>
+
+      <div className="actions">
+        <button className="add-button">Add Location</button>
+        <button className="remove-button">Remove Location</button>
+        <button className="update-button">Update Location</button>
       </div>
 
       <div className="bottom-nav">
