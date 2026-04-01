@@ -83,7 +83,7 @@ export default function Settings() {
   ];
 
   return (
-    <div className="user-home-page">
+    <div className="settings-page">
       <p className="page-label">Account Settings</p>
 
       <div className="user-info">

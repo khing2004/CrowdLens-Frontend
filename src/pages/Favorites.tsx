@@ -14,7 +14,7 @@ type FavoriteLocation = {
 };
 
 export default function Favorites() {
-  const [favorites, setFavorites] = useState<FavoriteLocation[]>([
+  const [favorites] = useState<FavoriteLocation[]>([
     {
       id: 1,
       name: "Cebu City Public Library",
