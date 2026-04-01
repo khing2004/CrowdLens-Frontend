@@ -11,6 +11,7 @@ type FavoriteLocation = {
   density: string;
   lastUpdated: string;
   address: string;
+  pos: [number, number];
 };
 
 export default function Favorites() {
@@ -22,6 +23,7 @@ export default function Favorites() {
       density: "Medium",
       lastUpdated: "5 mins ago",
       address: "Osmeña Blvd, Cebu City",
+      pos: [10.3095, 123.8931],
     },
     {
       id: 2,
@@ -30,6 +32,7 @@ export default function Favorites() {
       density: "High",
       lastUpdated: "2 mins ago",
       address: "M. Velez St, Cebu City",
+      pos: [10.3117, 123.8915],
     },
   ]);
   const [selectedFavorite, setSelectedFavorite] =
