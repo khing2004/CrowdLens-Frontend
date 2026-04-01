@@ -1,6 +1,6 @@
 import "./Favorites.css";
-import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 
 type FavoriteLocation = {
   id: number;
@@ -12,7 +12,7 @@ type FavoriteLocation = {
 };
 
 export default function Favorites() {
-  const [favorites, setFavorites] = useState<FavoriteLocation[]>([
+  const [favorites] = useState<FavoriteLocation[]>([
     {
       id: 1,
       name: "Cebu City Public Library",
