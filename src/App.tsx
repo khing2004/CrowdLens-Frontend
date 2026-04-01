@@ -5,6 +5,7 @@ import Forecast from "./pages/Forecast";
 import UserHomePage from "./pages/UserHome";
 import Settings from "./pages/Settings";
 import Favorites from "./pages/Favorites";
+import ManageLocations from "./pages/ManageLocations";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/home" element={<UserHomePage />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/favorites" element={<Favorites />} />
+        <Route path="/locations" element={<ManageLocations />} />
       </Routes>
     </Router>
   );
