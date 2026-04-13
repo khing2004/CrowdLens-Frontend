@@ -75,18 +75,12 @@ export default function ManageLocations() {
           </Link>
         </div>
         <div className="nav-section">
-          <Link to="/locations" className="nav-item">
+          <Link to="/settings" className="nav-item">
             <img
-              src="/Locations Selected.png"
-              alt="Locations"
+              src="/Settings Selected.png"
+              alt="Account"
               className="nav-icon"
             />
-            <p className="nav-text">Locations</p>
-          </Link>
-        </div>
-        <div className="nav-section">
-          <Link to="/settings" className="nav-item">
-            <img src="/Settings.png" alt="Account" className="nav-icon" />
             <p className="nav-text">Account</p>
           </Link>
         </div>
