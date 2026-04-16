@@ -275,3 +275,56 @@
   color: #e65100;
   font-weight: 500;
 }
+
+/* ---- Model type row + badge ---- */
+.fc-model-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 20px 0 12px;
+}
+
+.fc-location-label {
+  font-size: 13px;
+  color: #555;
+  margin: 0;
+}
+
+.fc-model-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.fc-badge-lstm {
+  background: #e8eaf6;
+  color: #3949ab;
+  border: 1px solid #9fa8da;
+}
+
+.fc-badge-stat {
+  background: #e0f2f1;
+  color: #00695c;
+  border: 1px solid #80cbc4;
+}
+
+/* ---- Trend chart ---- */
+.fc-chart-wrapper {
+  margin: 16px 0 12px;
+}
+
+.fc-chart-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 8px;
+}

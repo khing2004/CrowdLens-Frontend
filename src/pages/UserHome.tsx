@@ -9,9 +9,70 @@ import { densityClasses, getIconByDensity, getWaitTime } from "../utils/crowdHel
 import ReportModal from "../components/Home/ReportModal";
 import { Bookmark } from 'lucide-react';
 import type { CrowdLocation } from "../types/crowd";
-import { submitCrowdReport, getLocations } from "../api/crowdService";
+import { submitCrowdReport, getLocations, getForecast } from "../api/crowdService";
 import ConfirmReportModal from "../components/Home/ConfirmReportModal";
 
+
+// ── Forecast mini-chart types ─────────────────────────────────────────────────
+interface ForecastSlot { densityScore: number; isoTime: string; }
+
+// SVG sparkline — renders the next 6 predicted scores as a polyline + dots.
+// No external library needed; safe inside a Leaflet popup.
+function Sparkline({ slots, modelType }: { slots: ForecastSlot[]; modelType: string }) {
+  const W = 168, H = 40, PAD = 6;
+  const n = slots.length;
+  if (n < 2) return null;
+
+  const scoreColors: Record<number, string> = {
+    1: "#4caf50", 2: "#8bc34a", 3: "#ff9800", 4: "#f44336", 5: "#b71c1c"
+  };
+
+  const pts = slots.map((s, i) => {
+    const x = PAD + (i / (n - 1)) * (W - PAD * 2);
+    const y = PAD + ((5 - s.densityScore) / 4) * (H - PAD * 2);
+    return { x, y, score: s.densityScore };
+  });
+
+  const polyline = pts.map(p => `${p.x},${p.y}`).join(" ");
+  const peakScore = Math.max(...slots.map(s => s.densityScore));
+  const lineColor = scoreColors[peakScore] ?? "#30924C";
+  const isLSTM = modelType === "lstm";
+
+  return (
+    <div style={{ marginTop: 10 }}>
+      <p style={{ fontSize: 10, color: "#888", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.4px", fontWeight: 600 }}>
+        Predicted Trend
+        <span style={{
+          marginLeft: 6, padding: "1px 6px", borderRadius: 10, fontSize: 9, fontWeight: 700,
+          background: isLSTM ? "#e8eaf6" : "#e0f2f1",
+          color: isLSTM ? "#3949ab" : "#00695c"
+        }}>
+          {isLSTM ? "⚡ LSTM" : "📊 Statistical"}
+        </span>
+      </p>
+      <svg width={W} height={H} style={{ display: "block", overflow: "visible" }}>
+        <polyline points={polyline} fill="none" stroke={lineColor} strokeWidth={1.8}
+                  strokeLinecap="round" strokeLinejoin="round" />
+        {pts.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r={3.5}
+                  fill={scoreColors[p.score] ?? "#999"} stroke="white" strokeWidth={1} />
+        ))}
+      </svg>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
+        {slots.map((s, i) => {
+          const d = new Date(s.isoTime);
+          const h = d.getHours();
+          return (
+            <span key={i} style={{ fontSize: 9, color: "#aaa", width: `${100 / n}%`, textAlign: "center" }}>
+              {h % 12 === 0 ? 12 : h % 12}{h >= 12 ? "p" : "a"}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 // helper component to handle panning
 function RecenterAutomatically({ location }: { location: any }) {
@@ -33,7 +94,26 @@ export default function UserHomePage() {
   const [locations, setLocations] = useState<CrowdLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [pendingLevel, setPendingLevel] = useState<string | null>(null);
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);  
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
+  // Popup forecast mini-chart state
+  const [popupForecast, setPopupForecast]           = useState<{ slots: ForecastSlot[]; modelType: string } | null>(null);
+  const [popupForecastLoading, setPopupForecastLoading] = useState(false);
+
+  // Fetch a 6-hour forecast whenever the user clicks a marker
+  useEffect(() => {
+    if (!selectedLocation) return;
+    setPopupForecast(null);
+    setPopupForecastLoading(true);
+    getForecast(selectedLocation.id, 6)
+      .then((data: any) => {
+        if (!data.forecastUnavailable && data.forecast?.length) {
+          setPopupForecast({ slots: data.forecast, modelType: data.modelType ?? "statistical" });
+        }
+      })
+      .catch(() => {/* silently skip — popup still works without the chart */})
+      .finally(() => setPopupForecastLoading(false));
+  }, [selectedLocation?.id]);
 
   useEffect(() => {
     const fetchMapData = async () => {
