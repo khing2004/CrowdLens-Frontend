@@ -259,6 +259,15 @@ export default function UserHomePage() {
                     <p>Based on connection data, wait times are approximately {getWaitTime(location.density)}.</p>
                   </div>
 
+                  {/* Predicted trend sparkline — shown only for the active marker */}
+                  {selectedLocation?.id === location.id && (
+                    popupForecastLoading
+                      ? <p style={{ fontSize: 11, color: "#aaa", margin: "8px 0 0" }}>Loading trend…</p>
+                      : popupForecast && (
+                          <Sparkline slots={popupForecast.slots} modelType={popupForecast.modelType} />
+                        )
+                  )}
+
                   <button className="input-btn" onClick={
                     (e) => {
                       e.stopPropagation();
