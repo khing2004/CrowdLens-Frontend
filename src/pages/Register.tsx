@@ -67,7 +67,7 @@ export default function Register() {
     <div className="register-page">
       <img src="/Image2.png" className="side-image" alt="background" />
 
-      <div className="register-card" style={{ top: "100px", width: "350px" }}>
+      <div className="register-card">
         <div className="logo-area">
           <img src="/Logo.png" alt="logo" className="logo" />
           <img src="/Crowdlens.png" alt="crowdlens" className="logo-text" />
