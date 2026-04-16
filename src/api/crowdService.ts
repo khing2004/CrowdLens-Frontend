@@ -21,3 +21,8 @@ export const getLocations = async () => {
   console.log("Fetched locations:", response.data);
   return response.data;
 };
+
+export const getForecast = async (locationId: number, hoursAhead: number = 6) => {
+  const response = await apiClient.get(`/api/Forecast/${locationId}?hoursAhead=${hoursAhead}`);
+  return response.data;
+};
