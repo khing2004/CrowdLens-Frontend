@@ -1,3 +1,10 @@
+/* Defined here so the slide-up animation works without depending
+   on ConfirmReportModal.css loading first */
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;
