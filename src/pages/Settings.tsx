@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function Settings() {
+  const userType: "admin" | "user" = "user"; // TODO: replace with real user type from auth context
   const navigate = useNavigate();
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [locationEnabled, setLocationEnabled] = useState(true);
@@ -98,6 +99,19 @@ export default function Settings() {
           This is a sample bio for the user. It can be edited in the profile
           settings.
         </p>
+      </div>
+
+      <div>
+        <div className="settings-option">
+          {userType === "admin" && (
+            <button
+              className="settings-action"
+              onClick={() => navigate("/locations")}
+            >
+              Manage Locations
+            </button>
+          )}
+        </div>
       </div>
 
       <ul className="settings-options">
