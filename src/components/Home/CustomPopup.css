@@ -6,8 +6,7 @@
   padding: 0;
   box-shadow: 0 10px 25px rgba(0,0,0,0.1);
   overflow: hidden;
-  /* Responsive: fills viewport on small phones, caps at 340px on larger ones */
-  width: clamp(280px, 90vw, 340px);
+  width: 320px;
 }
 
 .custom-popup .leaflet-popup-content {

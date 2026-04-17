@@ -117,15 +117,16 @@
 }
 
 /* ---- Forecast slot grid ---- */
-/* CSS grid so all cells are equal width and wrapping is always even */
 .fc-slots {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  display: flex;
   gap: 8px;
+  flex-wrap: wrap;
   margin-bottom: 16px;
 }
 
 .fc-slot {
+  flex: 1;
+  min-width: 68px;
   display: flex;
   flex-direction: column;
   align-items: center;

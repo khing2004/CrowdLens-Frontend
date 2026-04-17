@@ -1,93 +1,17 @@
-/* ============================================================
-   App.css — Global foundation for CrowdLens
-   All page-specific styles live in their own CSS files.
-   ============================================================ */
-
-/* ── Inter font ──────────────────────────────────────────────*/
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-/* ── Box-sizing reset ────────────────────────────────────────*/
-*, *::before, *::after {
-  box-sizing: border-box;
-}
-
-/* ── CSS custom properties ───────────────────────────────────*/
-:root {
-  --brand-green:       #30924C;
-  --brand-green-dark:  #267a3e;
-  --brand-green-alpha: rgba(48, 146, 76, 0.8);
-  --brand-green-light: #f0fdf4;
-  --font-base:         'Inter', Arial, sans-serif;
-}
-
-/* ── Root shell ──────────────────────────────────────────────*/
 #root {
   min-height: 100vh;
   width: 100%;
-  font-family: var(--font-base);
+  /* Replace with your actual filename */
+  background-image: url('/Image2.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed; /* Keeps background still while scrolling */
+  background-repeat: no-repeat;
 }
 
-/* ── Shared bottom navigation bar ───────────────────────────
-   Used by UserHome.tsx and Settings.tsx.
-   Defined once here to avoid duplication.
-   ──────────────────────────────────────────────────────────*/
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 70px;
-  background: white;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.05);
-  z-index: 1000;
-}
-
-.nav-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.nav-icon {
-  height: 36px;
-  width: 36px;
-  object-fit: contain;
-}
-
-/* Reset all link states on nav items */
-.nav-item,
-.nav-item:link,
-.nav-item:visited,
-.nav-item:hover,
-.nav-item:active {
-  color: inherit;
-  text-decoration: none;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.nav-text {
-  font-size: 12px;
-  margin: 0;
-  text-align: center;
-}
-
-/* ── Loading screen ──────────────────────────────────────────*/
-.loading-screen {
+.container {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  font-family: var(--font-base);
-  font-size: 16px;
-  color: var(--brand-green);
-  background: whitesmoke;
+  height: 100vh;
 }
