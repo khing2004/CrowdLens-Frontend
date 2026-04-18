@@ -1,95 +1,231 @@
 // src/pages/UserHome.tsx
+import { MapContainer, TileLayer, Marker, useMap, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 import "./UserHome.css";
+import "../components/Home/CustomPopup.css";
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { densityClasses, getIconByDensity } from "../utils/crowdHelper";
+import ReportModal from "../components/Home/ReportModal";
+import { Bookmark } from "lucide-react";
+
+// helper component to handle panning
+function RecenterAutomatically({ location }: { location: any }) {
+  const map = useMap();
+  useEffect(() => {
+    if (location) {
+      map.flyTo(location.pos, 18, {
+        animate: true,
+        duration: 0.7, // Smooth pan duration in seconds
+      });
+    }
+  }, [location, map]);
+  return null;
+}
 
 export default function UserHomePage() {
-  const handleClick = (name: string) => alert(`${name} clicked!`);
+  const userType: "admin" | "user" = "user";
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<any>(null);
+  const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
+
+  const toggleFavorite = (id: number) => {
+    setFavoriteIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
+
+  const handleReportSubmit = (level: string) => {
+    console.log(`Reporting ${level} for ${selectedLocation.name}`);
+    // In your special problem, this will be an API call to your backend
+    alert("Thank you for your report!");
+    setIsReportModalOpen(false);
+  };
+
+  // Center of Cebu
+  const center: [number, number] = [10.3223, 123.8982];
+
+  //Mock data for Areas (replace with api call later)
+  const locations = [
+    {
+      id: 1,
+      name: "Cebu City Public Library",
+      type: "Public Library",
+      pos: [10.3095, 123.8931],
+      density: "Medium",
+      lastUpdated: "5 mins ago",
+    },
+    {
+      id: 2,
+      name: "Vicente Sotto Medical Center",
+      type: "Hospital",
+      pos: [10.3117, 123.8915],
+      density: "High",
+      lastUpdated: "2 mins ago",
+    },
+  ];
 
   return (
     <div className="user-home-page">
-      {/* Background */}
-      <img src="/Image2.png" className="background-image" alt="Background" />
+      {/* Header Section */}
+      <header className="home-header">
+        <h1 className="welcome-title">CrowdLens</h1>
+        <p className="welcome-subtitle">Welcome back, Khing</p>
+      </header>
 
-      {/* Welcome text */}
-      <p className="welcome-text">Welcome back, User!</p>
-
-      {/* Info Cards */}
-      <div className="info-card" style={{ top: 171, left: 29 }}></div>
-      <div className="info-card" style={{ top: 269, left: 29 }}></div>
-
-      {/* Map */}
-      <img src="/Map.png" alt="Map" className="map" />
-
-      {/* Labels (clickable) */}
-      <div
-        className="label"
-        style={{ top: 175, left: 39 }}
-        onClick={() => handleClick("Last Check-in Location")}
-      >
-        Last Check-in Location
-      </div>
-      <div
-        className="label"
-        style={{ top: 275, left: 39 }}
-        onClick={() => handleClick("Last Check-in Details")}
-      >
-        Last Check-in Details
-      </div>
-      <div
-        className="label"
-        style={{ top: 380, left: 39, zIndex: 10, position: "absolute" }}
-        onClick={() => handleClick("Pinned Locations")}
-      >
-        Pinned Locations
+      {/* Stats/Info Grid */}
+      <div className="stats-grid">
+        <div className="stat-card">
+          <span>Active Alerts</span>
+          <strong>3 Areas</strong>
+        </div>
+        <div className="stat-card">
+          <span>Last Check-in</span>
+          <strong>Downtown</strong>
+        </div>
       </div>
 
-      {/* Pins */}
-      <div
-        className="pin"
-        style={{ top: 550, left: 72 }}
-        onClick={() => handleClick("Pin 1")}
-      >
-        <img src="/Pin.png" alt="Pin 1" />
+      {/* Dashboard Section */}
+      <div className="dashboard-section">
+        <h2>Recent Activity</h2>
+        <p>You have no recent activity to display.</p>
       </div>
-      <div
-        className="pin"
-        style={{ top: 700, left: 186 }}
-        onClick={() => handleClick("Pin 2")}
-      >
-        <img src="/Pin.png" alt="Pin 2" />
-      </div>
-      <div
-        className="pin"
-        style={{ top: 439, left: 228 }}
-        onClick={() => handleClick("Pin 3")}
-      >
-        <img src="/Pin.png" alt="Pin 3" />
-      </div>
+      {/* placeholder for now, can be used for recent reports, check-ins, or favorites later on */}
 
-      {/* Zoom Button */}
-      <div
-        className="zoom-button"
-        style={{ top: 850, left: 430 }}
-        onClick={() => handleClick("Zoom Button")}
-      >
-        <img src="/ZoomButton.png" alt="Zoom" />
-      </div>
+      {/* Map Section */}
+      <main className="map-section">
+        <MapContainer
+          center={center}
+          zoom={14}
+          className="main-map"
+          style={{ height: "800px", width: "100%" }}
+        >
+          {" "}
+          {/* Add this inline to be sure */}
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" // Clean grey map style
+            attribution="&copy; OpenStreetMap"
+          />
+          {selectedLocation && (
+            <RecenterAutomatically location={selectedLocation} />
+          )}
+          {locations.map((location) => (
+            <Marker
+              key={location.id}
+              position={location.pos as [number, number]}
+              icon={getIconByDensity(location.density)}
+              eventHandlers={{
+                click: () => setSelectedLocation(location),
+              }}
+            >
+              <Popup className="custom-popup">
+                <div className="popup-container">
+                  <div className="popup-header">
+                    <div className="badge-wrapper">
+                      <p
+                        style={{
+                          fontSize: "12px",
+                          color: "#30924C",
+                          fontWeight: "bold",
+                          margin: "0 0 4px 0",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {location.type}
+                      </p>
+                      <button
+                        className="save-link-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(location.id);
+                        }}
+                      >
+                        <Bookmark
+                          size={18}
+                          fill={
+                            favoriteIds.includes(location.id)
+                              ? "#1f2937"
+                              : "none"
+                          }
+                          stroke="#1f2937"
+                          strokeWidth={2}
+                        />
+                      </button>
+                    </div>
+                    <div className="title-row">
+                      <h2>{location.name}</h2>
+                    </div>
+
+                    <div className="status-row">
+                      <div className="badge-wrapper">
+                        <span
+                          className={`badge ${densityClasses[location.density]}`}
+                        >
+                          ● {location.density} Crowd Level
+                        </span>
+                        <span className="updated-text">
+                          Updated {location.lastUpdated}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="quieter-nearby">
+                      <strong>Tip:</strong> Lahug Area is currently quieter.
+                    </p>
+                  </div>
+
+                  <div className="congestion-info">
+                    <h3>Live Insights</h3>
+                    <p>
+                      Based on connection data, wait times are approximately
+                      10-20 minutes.
+                    </p>
+                  </div>
+
+                  <button
+                    className="input-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsReportModalOpen(true);
+                      console.log("Modal should be open now.");
+                    }}
+                  >
+                    <span>+</span> Input Crowd Level
+                  </button>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+      </main>
 
       {/* Bottom navigation */}
       <div className="bottom-nav">
-        <Link to="/" className="nav-item active">
-          <img src="/Home.png" alt="Home" className="nav-icon" />
-          <p className="nav-text">Home</p>
-        </Link>
-        <Link to="/favorites" className="nav-item">
-          <img src="/Favorites.png" alt="Favorites" className="nav-icon" />
-          <p className="nav-text">Favorites</p>
-        </Link>
-        <Link to="/settings" className="nav-item">
-          <img src="/Settings.png" alt="Account" className="nav-icon" />
-          <p className="nav-text">Account</p>
-        </Link>
+        <div className="nav-section">
+          <Link to="/home" className="nav-item">
+            <img src="/Home Selected.png" alt="Home" className="nav-icon" />
+            <p className="nav-text">Home</p>
+          </Link>
+        </div>
+
+        <div className="nav-section">
+          <Link to="/favorites" className="nav-item">
+            <img src="/Favorites.png" alt="Favorites" className="nav-icon" />
+            <p className="nav-text">Favorites</p>
+          </Link>
+        </div>
+        <div className="nav-section">
+          <Link to="/settings" className="nav-item">
+            <img src="/Settings.png" alt="Account" className="nav-icon" />
+            <p className="nav-text">Account</p>
+          </Link>
+        </div>
       </div>
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        locationName={selectedLocation?.name || ""}
+        onSubmit={handleReportSubmit}
+      />
     </div>
   );
 }
