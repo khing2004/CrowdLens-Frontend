@@ -2,12 +2,12 @@
 import { MapContainer, TileLayer, Marker, useMap, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "./UserHome.css";
-import "../components/Home/CustomPopup.css"
+import "../components/Home/CustomPopup.css";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { densityClasses, getIconByDensity } from "../utils/crowdHelper";
 import ReportModal from "../components/Home/ReportModal";
-import { Bookmark } from 'lucide-react';
+import { Bookmark } from "lucide-react";
 
 // helper component to handle panning
 function RecenterAutomatically({ location }: { location: any }) {
@@ -19,19 +19,19 @@ function RecenterAutomatically({ location }: { location: any }) {
         duration: 0.7, // Smooth pan duration in seconds
       });
     }
-  }, [location, map]);  
+  }, [location, map]);
   return null;
 }
 
-
 export default function UserHomePage() {
+  const userType: "admin" | "user" = "user";
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
   const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
 
   const toggleFavorite = (id: number) => {
-    setFavoriteIds(prev =>
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    setFavoriteIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
   };
 
@@ -42,31 +42,28 @@ export default function UserHomePage() {
     setIsReportModalOpen(false);
   };
 
-  // Center of Cebu 
+  // Center of Cebu
   const center: [number, number] = [10.3223, 123.8982];
 
   //Mock data for Areas (replace with api call later)
   const locations = [
-  { 
-    id: 1, 
-    name: "Cebu City Public Library", 
-    type: "Public Library",
-    pos: [10.3095, 123.8931], 
-    density: "Medium", 
-    lastUpdated: "5 mins ago" 
-    
-  },
-  { 
-    id: 2, 
-    name: "Vicente Sotto Medical Center", 
-    type: "Hospital",
-    pos: [10.3117, 123.8915], 
-    density: "High", 
-    lastUpdated: "2 mins ago" 
-  }
-
-  
-];
+    {
+      id: 1,
+      name: "Cebu City Public Library",
+      type: "Public Library",
+      pos: [10.3095, 123.8931],
+      density: "Medium",
+      lastUpdated: "5 mins ago",
+    },
+    {
+      id: 2,
+      name: "Vicente Sotto Medical Center",
+      type: "Hospital",
+      pos: [10.3117, 123.8915],
+      density: "High",
+      lastUpdated: "2 mins ago",
+    },
+  ];
 
   return (
     <div className="user-home-page">
@@ -88,6 +85,13 @@ export default function UserHomePage() {
         </div>
       </div>
 
+      {/* Dashboard Section */}
+      <div className="dashboard-section">
+        <h2>Recent Activity</h2>
+        <p>You have no recent activity to display.</p>
+      </div>
+      {/* placeholder for now, can be used for recent reports, check-ins, or favorites later on */}
+
       {/* Map Section */}
       <main className="map-section">
         <MapContainer
@@ -102,27 +106,31 @@ export default function UserHomePage() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" // Clean grey map style
             attribution="&copy; OpenStreetMap"
           />
-
           {selectedLocation && (
-            <RecenterAutomatically 
-              location ={selectedLocation} 
-            />
+            <RecenterAutomatically location={selectedLocation} />
           )}
-
-          {locations.map(location => (
-            <Marker 
-              key={location.id} 
-              position={location.pos as [number, number]} 
+          {locations.map((location) => (
+            <Marker
+              key={location.id}
+              position={location.pos as [number, number]}
               icon={getIconByDensity(location.density)}
               eventHandlers={{
-                click: () => setSelectedLocation(location)
+                click: () => setSelectedLocation(location),
               }}
             >
               <Popup className="custom-popup">
                 <div className="popup-container">
                   <div className="popup-header">
                     <div className="badge-wrapper">
-                      <p style={{ fontSize: '12px', color: '#30924C', fontWeight: 'bold', margin: '0 0 4px 0', textTransform: 'uppercase' }}>
+                      <p
+                        style={{
+                          fontSize: "12px",
+                          color: "#30924C",
+                          fontWeight: "bold",
+                          margin: "0 0 4px 0",
+                          textTransform: "uppercase",
+                        }}
+                      >
                         {location.type}
                       </p>
                       <button
@@ -134,22 +142,30 @@ export default function UserHomePage() {
                       >
                         <Bookmark
                           size={18}
-                          fill={favoriteIds.includes(location.id) ? "#1f2937" : "none"}
+                          fill={
+                            favoriteIds.includes(location.id)
+                              ? "#1f2937"
+                              : "none"
+                          }
                           stroke="#1f2937"
                           strokeWidth={2}
                         />
                       </button>
-                      </div>
+                    </div>
                     <div className="title-row">
                       <h2>{location.name}</h2>
                     </div>
-                   
+
                     <div className="status-row">
                       <div className="badge-wrapper">
-                        <span className={`badge ${densityClasses[location.density]}`}>
+                        <span
+                          className={`badge ${densityClasses[location.density]}`}
+                        >
                           ● {location.density} Crowd Level
                         </span>
-                        <span className="updated-text">Updated {location.lastUpdated}</span>
+                        <span className="updated-text">
+                          Updated {location.lastUpdated}
+                        </span>
                       </div>
                     </div>
                     <p className="quieter-nearby">
@@ -159,15 +175,19 @@ export default function UserHomePage() {
 
                   <div className="congestion-info">
                     <h3>Live Insights</h3>
-                    <p>Based on connection data, wait times are approximately 10-20 minutes.</p>
+                    <p>
+                      Based on connection data, wait times are approximately
+                      10-20 minutes.
+                    </p>
                   </div>
 
-                  <button className="input-btn" onClick={
-                    (e) => {
+                  <button
+                    className="input-btn"
+                    onClick={(e) => {
                       e.stopPropagation();
                       setIsReportModalOpen(true);
                       console.log("Modal should be open now.");
-                      }}
+                    }}
                   >
                     <span>+</span> Input Crowd Level
                   </button>
@@ -200,7 +220,7 @@ export default function UserHomePage() {
           </Link>
         </div>
       </div>
-      <ReportModal 
+      <ReportModal
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
         locationName={selectedLocation?.name || ""}
