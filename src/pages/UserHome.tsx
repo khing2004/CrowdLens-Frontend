@@ -2,7 +2,7 @@
 import { MapContainer, TileLayer, Marker, useMap, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "./UserHome.css";
-import "../components/Home/CustomPopup.css"
+import "../components/Home/CustomPopup.css";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { densityClasses, getIconByDensity, getWaitTime, densityRank, getDistance } from "../utils/crowdHelper";
@@ -84,17 +84,19 @@ function RecenterAutomatically({ location }: { location: any }) {
         duration: 0.7, // Smooth pan duration in seconds
       });
     }
-  }, [location, map]);  
+  }, [location, map]);
   return null;
 }
 
 export default function UserHomePage() {
+  const userType: "admin" | "user" = "user";
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
   const [locations, setLocations] = useState<CrowdLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [pendingLevel, setPendingLevel] = useState<string | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
 
   // Popup forecast mini-chart state
   const [popupForecast, setPopupForecast]           = useState<{ slots: ForecastSlot[]; modelType: string } | null>(null);
@@ -136,6 +138,12 @@ export default function UserHomePage() {
   const handleInitialSelect = (level: string) => {
     setPendingLevel(level);
     setIsConfirmOpen(true);
+  };
+
+  const toggleFavorite = (id: number) => {
+    setFavoriteIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
   };
 
   const handleFinalConfirm = async () => {
@@ -196,6 +204,13 @@ export default function UserHomePage() {
         </div>
       </div>
 
+      {/* Dashboard Section */}
+      <div className="dashboard-section">
+        <h2>Recent Activity</h2>
+        <p>You have no recent activity to display.</p>
+      </div>
+      {/* placeholder for now, can be used for recent reports, check-ins, or favorites later on */}
+
       {/* Map Section */}
       <main className="map-section">
         <MapContainer
@@ -210,40 +225,61 @@ export default function UserHomePage() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" // Clean grey map style
             attribution="&copy; OpenStreetMap"
           />
-
           {selectedLocation && (
-            <RecenterAutomatically 
-              location ={selectedLocation} 
-            />
+            <RecenterAutomatically location={selectedLocation} />
           )}
-
-          {locations.map(location => (
-            <Marker 
-              key={location.id} 
-              position={location.pos as [number, number]} 
+          {locations.map((location) => (
+            <Marker
+              key={location.id}
+              position={location.pos as [number, number]}
               icon={getIconByDensity(location.density)}
               eventHandlers={{
-                click: () => setSelectedLocation(location)
+                click: () => setSelectedLocation(location),
               }}
             >
               <Popup className="custom-popup">
                 <div className="popup-container">
                   <div className="popup-header">
                     <div className="badge-wrapper">
-                      <p style={{ fontSize: '12px', color: '#30924C', fontWeight: 'bold', margin: '0 0 4px 0', textTransform: 'uppercase' }}>
+                      <p
+                        style={{
+                          fontSize: "12px",
+                          color: "#30924C",
+                          fontWeight: "bold",
+                          margin: "0 0 4px 0",
+                          textTransform: "uppercase",
+                        }}
+                      >
                         {location.type}
                       </p>
-                      <button className="save-link-btn">
-                          <Bookmark/>
-                        </button>
-                      </div>
+                      <button
+                        className="save-link-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(location.id);
+                        }}
+                      >
+                        <Bookmark
+                          size={18}
+                          fill={
+                            favoriteIds.includes(location.id)
+                              ? "#1f2937"
+                              : "none"
+                          }
+                          stroke="#1f2937"
+                          strokeWidth={2}
+                        />
+                      </button>
+                    </div>
                     <div className="title-row">
                       <h2>{location.name}</h2>
                     </div>
-                   
+
                     <div className="status-row">
                       <div className="badge-wrapper">
-                        <span className={`badge ${densityClasses[location.density]}`}>
+                        <span
+                          className={`badge ${densityClasses[location.density]}`}
+                        >
                           ● {location.density} Crowd Level
                         </span>
                         <span className="updated-text">{location.lastUpdated}</span>
@@ -283,12 +319,13 @@ export default function UserHomePage() {
                         )
                   )}
 
-                  <button className="input-btn" onClick={
-                    (e) => {
+                  <button
+                    className="input-btn"
+                    onClick={(e) => {
                       e.stopPropagation();
                       setIsReportModalOpen(true);
                       console.log("Modal should be open now.");
-                      }}
+                    }}
                   >
                     <span>+</span> Input Crowd Level
                   </button>
@@ -321,7 +358,7 @@ export default function UserHomePage() {
           </Link>
         </div>
       </div>
-      <ReportModal 
+      <ReportModal
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
         locationName={selectedLocation?.name || ""}
