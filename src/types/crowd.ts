@@ -5,7 +5,7 @@ export type density = "Very High" | "High" | "Medium" | "Low" | "Very Low";
 export const Options = [
   { level: "Very Low", desc: "Plenty of space, no waiting time." },
   { level: "Low", desc: "A few people around, very comfortable." },
-  { level: "Moderate", desc: "Moderate crowd, some waiting may occur." },
+  { level: "Medium", desc: "Moderate crowd, some waiting may occur." },
   { level: "High", desc: "Crowded, limited seating and longer waits." },
   { level: "Very High", desc: "Extremely packed, avoid if possible." },
 ];

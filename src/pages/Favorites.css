@@ -17,57 +17,6 @@
   text-align: center;
 }
 
-.bottom-nav {
-  z-index: 1000; /* Ensures it stays above the map */
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  height: 70px;
-  background: white;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
-}
-
-.nav-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;  /* Adds consistent spacing between icon and text */
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.nav-icon {
-  height: 36px;
-  width: 36px;
-  object-fit: contain;
-}
-
-.nav-item,
-.nav-item:link,
-.nav-item:visited,
-.nav-item:hover,
-.nav-item:active {
-  color: inherit;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.nav-item {
-  font-size: 12px;
-  margin: 0;
-  text-align: center;
-  width: 100%;
-}
-
-.nav-text {
-  font-size: 12px;
-  margin: 0;
-  text-align: center;
-  width: 100%;
-}
 
 .favorites-list {
   width: min(100%, 900px);
@@ -180,4 +129,28 @@
   color: #636e72;
   padding: 20px 0;
   font-style: italic;
+}
+
+.cancel-btn {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: white;
+  color: #636e72;
+  font-weight: 600;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.cancel-btn:hover {
+  background: #f5f5f5;
+}
+
+.delete-confirm {
+  margin-top: 12px;
+}
+
+.delete-confirm-text {
+  font-size: 0.85rem;
+  color: #636e72;
+  margin: 0 0 8px;
 }

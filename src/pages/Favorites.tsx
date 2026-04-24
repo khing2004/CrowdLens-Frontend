@@ -1,8 +1,9 @@
 import "./Favorites.css";
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { submitCrowdReport } from "../api/crowdService";
 import ReportModal from "../components/Home/ReportModal";
+import BottomNav from "../components/BottomNav";
+import { toastSuccess, toastError } from "../components/Toast";
 
 type FavoriteLocation = {
   id: number;
@@ -35,63 +36,48 @@ export default function Favorites() {
       pos: [10.3117, 123.8915],
     },
   ]);
-  const [selectedFavorite, setSelectedFavorite] =
-    useState<FavoriteLocation | null>(null);
+  const [selectedFavorite, setSelectedFavorite] = useState<FavoriteLocation | null>(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const openReportModal = (fav: FavoriteLocation) => {
     setSelectedFavorite(fav);
-    setError(null);
     setIsReportModalOpen(true);
   };
 
   const handleReportSubmit = async (level: string) => {
     if (!selectedFavorite) return;
-
-    setError(null);
-
-    let success = false;
     try {
       await submitCrowdReport(selectedFavorite.id, level);
-      success = true;
-    } catch (err) {
-      console.warn(
-        "Report API failed, but we'll still show success for UX:",
-        err,
-      );
-      success = true;
+    } catch {
+      // silently continue — optimistic update below
     }
-
-    if (success) {
-      setFavorites((prev) =>
-        prev.map((fav) =>
-          fav.id === selectedFavorite.id
-            ? { ...fav, density: level, lastUpdated: "Just now" }
-            : fav,
-        ),
-      );
-      setIsReportModalOpen(false);
-      setSelectedFavorite(null);
-      window.alert("Thank you for your report!");
-    }
+    setFavorites((prev) =>
+      prev.map((fav) =>
+        fav.id === selectedFavorite.id ? { ...fav, density: level, lastUpdated: "Just now" } : fav
+      )
+    );
+    setIsReportModalOpen(false);
+    setSelectedFavorite(null);
+    toastSuccess("Report submitted. Thank you!");
   };
 
   const handleDelete = (locationId: number) => {
     const target = favorites.find((fav) => fav.id === locationId);
     if (!target) return;
+    // Replace window.confirm with inline confirmation state
+    setDeletingId(locationId);
+  };
 
-    const confirmed = window.confirm(`Delete favorite \"${target.name}\"?`);
-    if (!confirmed) return;
-
+  const confirmDelete = (locationId: number) => {
     setFavorites((prev) => prev.filter((fav) => fav.id !== locationId));
+    setDeletingId(null);
+    toastSuccess("Favorite removed.");
   };
 
   return (
     <div className="favorites-page">
       <p className="page-label">Favorites</p>
-
-      {error && <p className="error-message">{error}</p>}
 
       <div className="favorites-list">
         {favorites.length === 0 ? (
@@ -105,58 +91,38 @@ export default function Favorites() {
               <p className="favorite-item">Last updated: {fav.lastUpdated}</p>
               <p className="favorite-item">Address: {fav.address}</p>
 
-              <div className="favorite-actions">
-                <button
-                  className="create-report-btn"
-                  onClick={() => openReportModal(fav)}
-                >
-                  Create Report
-                </button>
-
-                <button
-                  className="delete-btn"
-                  onClick={() => handleDelete(fav.id)}
-                >
-                  Delete
-                </button>
-              </div>
+              {deletingId === fav.id ? (
+                <div className="delete-confirm">
+                  <p className="delete-confirm-text">Remove &ldquo;{fav.name}&rdquo;?</p>
+                  <div className="favorite-actions">
+                    <button className="delete-btn" onClick={() => confirmDelete(fav.id)}>
+                      Yes, Remove
+                    </button>
+                    <button className="cancel-btn" onClick={() => setDeletingId(null)}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="favorite-actions">
+                  <button className="create-report-btn" onClick={() => openReportModal(fav)}>
+                    Create Report
+                  </button>
+                  <button className="delete-btn" onClick={() => handleDelete(fav.id)}>
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           ))
         )}
       </div>
 
-      <div className="bottom-nav">
-        <div className="nav-section">
-          <Link to="/home" className="nav-item">
-            <img src="/Home.png" alt="Home" className="nav-icon" />
-            <p className="nav-text">Home</p>
-          </Link>
-        </div>
-
-        <div className="nav-section">
-          <Link to="/favorites" className="nav-item">
-            <img
-              src="/Favorites Selected.png"
-              alt="Favorites"
-              className="nav-icon"
-            />
-            <p className="nav-text">Favorites</p>
-          </Link>
-        </div>
-        <div className="nav-section">
-          <Link to="/settings" className="nav-item">
-            <img src="/Settings.png" alt="Account" className="nav-icon" />
-            <p className="nav-text">Account</p>
-          </Link>
-        </div>
-      </div>
+      <BottomNav />
 
       <ReportModal
         isOpen={isReportModalOpen}
-        onClose={() => {
-          setIsReportModalOpen(false);
-          setSelectedFavorite(null);
-        }}
+        onClose={() => { setIsReportModalOpen(false); setSelectedFavorite(null); }}
         locationName={selectedFavorite?.name || ""}
         onSubmit={handleReportSubmit}
       />

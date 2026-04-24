@@ -1,35 +1,26 @@
 import "./Settings.css";
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { authService } from "../api/authService";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import BottomNav from "../components/BottomNav";
 
 export default function Settings() {
-  const userType: "admin" | "user" = "user"; // TODO: replace with real user type from auth context
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [locationEnabled, setLocationEnabled] = useState(true);
-  const [pendingLocationEnabled, setPendingLocationEnabled] =
-    useState(locationEnabled);
-  const [notificationsSetting, setNotificationsSetting] = useState<
-    "All" | "Mentions" | "None"
-  >("All");
-  const [pendingNotificationsSetting, setPendingNotificationsSetting] =
-    useState<"All" | "Mentions" | "None">("All");
+  const [pendingLocationEnabled, setPendingLocationEnabled] = useState(locationEnabled);
+  const [notificationsSetting, setNotificationsSetting] = useState<"All" | "Mentions" | "None">("All");
+  const [pendingNotificationsSetting, setPendingNotificationsSetting] = useState<"All" | "Mentions" | "None">("All");
 
   const panelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (!activePanel) {
-      return;
-    }
+    if (!activePanel) return;
 
     const onClickOutside = (event: MouseEvent) => {
-      if (!panelRef.current) {
-        return;
-      }
-
-      const targetNode = event.target as Node;
-      if (!panelRef.current.contains(targetNode)) {
+      if (!panelRef.current) return;
+      if (!panelRef.current.contains(event.target as Node)) {
         setActivePanel(null);
         setPendingLocationEnabled(locationEnabled);
         setPendingNotificationsSetting(notificationsSetting);
@@ -41,14 +32,9 @@ export default function Settings() {
   }, [activePanel, locationEnabled, notificationsSetting]);
 
   const handleOptionClick = (item: string) => {
-    if (item === "Location Sharing") {
-      setPendingLocationEnabled(locationEnabled);
-      setActivePanel((open) => (open === item ? null : item));
-      return;
-    }
-
-    if (item === "Notifications") {
-      setPendingNotificationsSetting(notificationsSetting);
+    if (item === "Location Sharing" || item === "Notifications") {
+      if (item === "Location Sharing") setPendingLocationEnabled(locationEnabled);
+      if (item === "Notifications") setPendingNotificationsSetting(notificationsSetting);
       setActivePanel((open) => (open === item ? null : item));
       return;
     }
@@ -56,19 +42,9 @@ export default function Settings() {
     setActivePanel(null);
 
     switch (item) {
-      case "Profile":
-        navigate("/profile");
-        break;
-      case "Privacy Policy":
-        window.open("/privacy-policy", "_blank");
-        break;
-      case "Terms of Service":
-        window.open("/terms-of-service", "_blank");
-        break;
       case "Logout":
-        // TODO: replace with real logout API call
-        console.log("Logout clicked");
-        navigate("/login");
+        logout();
+        navigate("/");
         break;
       default:
         break;
@@ -76,18 +52,14 @@ export default function Settings() {
   };
 
   const optionItems = [
-    "Profile",
     "Location Sharing",
     "Notifications",
-    "Privacy Policy",
-    "Terms of Service",
     "Logout",
   ];
 
-  const handleLogout = () => {
-    authService.logout();
-    navigate("/login");
-  };
+  const isAdmin = user?.role === "admin" || user?.role === "Admin";
+  const displayName = user?.name ?? "—";
+  const displayEmail = user?.email ?? "—";
 
   return (
     <div className="settings-page">
@@ -95,51 +67,41 @@ export default function Settings() {
 
       <div className="user-info">
         <img src="/Logo.png" alt="Profile" className="profile-picture" />
-        <p className="username">test</p>
-        <p className="email">test@example.com</p>
+        <p className="username">{displayName}</p>
+        <p className="email">{displayEmail}</p>
       </div>
 
       <div className="bio">
         <h2>Bio</h2>
         <p className="bio-text">
-          This is a sample bio for the user. It can be edited in the profile
-          settings.
+          This is a sample bio for the user. It can be edited in the profile settings.
         </p>
       </div>
 
-      <div>
-        <div className="settings-option">
-          {userType === "admin" && (
-            <button
-              className="settings-action"
-              onClick={() => navigate("/locations")}
-            >
-              Manage Locations
-            </button>
-          )}
+      {isAdmin && (
+        <div className="settings-option" style={{ margin: "0 auto 8px", maxWidth: 320 }}>
+          <button className="settings-action" onClick={() => navigate("/locations")}>
+            Manage Locations
+          </button>
         </div>
-      </div>
+      )}
 
       <ul className="settings-options">
         {optionItems.map((item) => {
           const isActivePanel = activePanel === item;
+          const isLogout = item === "Logout";
 
           return (
             <li key={item} className="settings-option">
               <button
-                className="settings-action"
+                className={`settings-action${isLogout ? " settings-action-logout" : ""}`}
                 onClick={() => handleOptionClick(item)}
               >
                 {item}
               </button>
 
               {isActivePanel && item === "Location Sharing" && (
-                <div
-                  ref={panelRef}
-                  className="settings-panel"
-                  role="dialog"
-                  aria-label="Location Sharing settings"
-                >
+                <div ref={panelRef} className="settings-panel" role="dialog" aria-label="Location Sharing settings">
                   <div className="panel-row">
                     <label htmlFor="location-toggle">Location Sharing</label>
                     <button
@@ -151,20 +113,10 @@ export default function Settings() {
                     </button>
                   </div>
                   <div className="panel-actions">
-                    <button
-                      onClick={() => {
-                        setLocationEnabled(pendingLocationEnabled);
-                        setActivePanel(null);
-                      }}
-                    >
+                    <button onClick={() => { setLocationEnabled(pendingLocationEnabled); setActivePanel(null); }}>
                       Save
                     </button>
-                    <button
-                      onClick={() => {
-                        setPendingLocationEnabled(locationEnabled);
-                        setActivePanel(null);
-                      }}
-                    >
+                    <button onClick={() => { setPendingLocationEnabled(locationEnabled); setActivePanel(null); }}>
                       Cancel
                     </button>
                   </div>
@@ -172,63 +124,27 @@ export default function Settings() {
               )}
 
               {isActivePanel && item === "Notifications" && (
-                <div
-                  ref={panelRef}
-                  className="settings-panel"
-                  role="dialog"
-                  aria-label="Notification preferences"
-                >
+                <div ref={panelRef} className="settings-panel" role="dialog" aria-label="Notification preferences">
                   <fieldset>
                     <legend>Notification preferences</legend>
-                    <label>
-                      <input
-                        type="radio"
-                        name="notification-mode"
-                        value="All"
-                        checked={pendingNotificationsSetting === "All"}
-                        onChange={() => setPendingNotificationsSetting("All")}
-                      />
-                      All notifications
-                    </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name="notification-mode"
-                        value="Mentions"
-                        checked={pendingNotificationsSetting === "Mentions"}
-                        onChange={() =>
-                          setPendingNotificationsSetting("Mentions")
-                        }
-                      />
-                      Mentions only
-                    </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name="notification-mode"
-                        value="None"
-                        checked={pendingNotificationsSetting === "None"}
-                        onChange={() => setPendingNotificationsSetting("None")}
-                      />
-                      None
-                    </label>
+                    {(["All", "Mentions", "None"] as const).map((val) => (
+                      <label key={val}>
+                        <input
+                          type="radio"
+                          name="notification-mode"
+                          value={val}
+                          checked={pendingNotificationsSetting === val}
+                          onChange={() => setPendingNotificationsSetting(val)}
+                        />
+                        {val === "All" ? "All notifications" : val === "Mentions" ? "Mentions only" : "None"}
+                      </label>
+                    ))}
                   </fieldset>
-
                   <div className="panel-actions">
-                    <button
-                      onClick={() => {
-                        setNotificationsSetting(pendingNotificationsSetting);
-                        setActivePanel(null);
-                      }}
-                    >
+                    <button onClick={() => { setNotificationsSetting(pendingNotificationsSetting); setActivePanel(null); }}>
                       Save
                     </button>
-                    <button
-                      onClick={() => {
-                        setPendingNotificationsSetting(notificationsSetting);
-                        setActivePanel(null);
-                      }}
-                    >
+                    <button onClick={() => { setPendingNotificationsSetting(notificationsSetting); setActivePanel(null); }}>
                       Cancel
                     </button>
                   </div>
@@ -239,31 +155,7 @@ export default function Settings() {
         })}
       </ul>
 
-      <div className="bottom-nav">
-        <div className="nav-section">
-          <Link to="/home" className="nav-item">
-            <img src="/Home.png" alt="Home" className="nav-icon" />
-            <p className="nav-text">Home</p>
-          </Link>
-        </div>
-
-        <div className="nav-section">
-          <Link to="/favorites" className="nav-item">
-            <img src="/Favorites.png" alt="Favorites" className="nav-icon" />
-            <p className="nav-text">Favorites</p>
-          </Link>
-        </div>
-        <div className="nav-section">
-          <Link to="/settings" className="nav-item">
-            <img
-              src="/Settings Selected.png"
-              alt="Account"
-              className="nav-icon"
-            />
-            <p className="nav-text">Account</p>
-          </Link>
-        </div>
-      </div>
+      <BottomNav />
     </div>
   );
 }
