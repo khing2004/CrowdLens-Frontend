@@ -388,3 +388,12 @@
   border-radius: 20px;
   flex-shrink: 0;
 }
+
+.dashboard-loading,
+.dashboard-empty {
+  font-size: 13px;
+  color: #b2bec3;
+  text-align: center;
+  padding: 12px 0;
+  font-style: italic;
+}
