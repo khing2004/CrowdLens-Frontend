@@ -1,10 +1,28 @@
-import axios from "axios";
+import { apiClient } from "./authService";
 
-export const submitCrowdReport = async (locationId: number, level: string) => {
-  // This is the "industry standard" place for this logic
-  return await axios.post("/api/reports", {
+export const submitCrowdReport = async (
+  locationId: number, 
+  level: string, 
+  latitude: number, 
+  longitude: number) => {
+  return await apiClient.post("/api/Crowd/report", {
     locationId,
-    crowdLevel: level,
-    timestamp: new Date().toISOString()
+    SelectedLevel: level, //crowdlevel
+    latitude,
+    longitude,
+    timestamp: new Date().toISOString(),
+
   });
+  
+};
+
+export const getLocations = async () => {
+  const response = await apiClient.get('/api/Crowd/locations');
+  console.log("Fetched locations:", response.data);
+  return response.data;
+};
+
+export const getForecast = async (locationId: number, hoursAhead: number = 6) => {
+  const response = await apiClient.get(`/api/Forecast/${locationId}?hoursAhead=${hoursAhead}`);
+  return response.data;
 };

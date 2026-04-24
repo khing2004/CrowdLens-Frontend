@@ -2,13 +2,22 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-const apiClient = axios.create({
+export const apiClient = axios.create({
     baseURL: API_URL,
     headers: {
         'Content-Type': 'application/json',
     },
 });
 // Why do we need content-type: application/json? what is this for? how does axios.create work? 
+
+// Interceptor: Automatically attach token to every request
+apiClient.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token'); //
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`; //
+    }
+    return config;
+});
 
 export const authService = {
     // Login method
@@ -17,6 +26,8 @@ export const authService = {
         if (response.data.token){ //how are we able to access data.token?
             localStorage.setItem('token', response.data.token); // what does setItem do? is localStorage enough for a scalable website? can it support many users?
         }
+
+        console.log("Token received.")
         return response.data;
     },
 
@@ -35,6 +46,7 @@ export const authService = {
     // for log out
     logout() {
         localStorage.removeItem('token');
+        console.log("token removed, logged out.")
     },
 
     getToken(){

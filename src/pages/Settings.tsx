@@ -1,6 +1,7 @@
 import "./Settings.css";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { authService } from "../api/authService";
 
 export default function Settings() {
   const userType: "admin" | "user" = "user"; // TODO: replace with real user type from auth context
@@ -82,6 +83,11 @@ export default function Settings() {
     "Terms of Service",
     "Logout",
   ];
+
+  const handleLogout = () => {
+    authService.logout();
+    navigate("/login");
+  };
 
   return (
     <div className="settings-page">
