@@ -30,6 +30,14 @@ export const densityClasses: Record<string, string> = {
   "Very Low": "very-low"
 };
 
+export const densityRank: Record<string, number> = {
+  "Very Low": 1,
+  "Low": 2,
+  "Medium": 3,
+  "High": 4,
+  "Very High": 5,
+};
+
 export const getWaitTime = (density: string) => {
   switch (density) {
     case "Very High": return "30+ minutes";

@@ -5,7 +5,7 @@ import "./UserHome.css";
 import "../components/Home/CustomPopup.css"
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { densityClasses, getIconByDensity, getWaitTime } from "../utils/crowdHelper";
+import { densityClasses, getIconByDensity, getWaitTime, densityRank } from "../utils/crowdHelper";
 import ReportModal from "../components/Home/ReportModal";
 import { Bookmark } from 'lucide-react';
 import type { CrowdLocation } from "../types/crowd";
@@ -249,9 +249,18 @@ export default function UserHomePage() {
                         <span className="updated-text">{location.lastUpdated}</span>
                       </div>
                     </div>
-                    <p className="quieter-nearby">
-                      <strong>Tip:</strong> Lahug Area is currently quieter.
-                    </p>
+                    {(() => {
+                      const quieter = locations
+                        .filter(l => l.id !== location.id && l.type === location.type)
+                        .sort((a, b) => densityRank[a.density] - densityRank[b.density])[0];
+                      return quieter && densityRank[quieter.density] < densityRank[location.density]
+                        ? (
+                          <p className="quieter-nearby">
+                            <strong>Tip:</strong> {quieter.name} is currently quieter.
+                          </p>
+                        )
+                        : null;
+                    })()}
                   </div>
 
                   <div className="congestion-info">
