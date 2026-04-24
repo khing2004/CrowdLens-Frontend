@@ -7,7 +7,17 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { densityClasses, getIconByDensity, getWaitTime, densityRank, getDistance } from "../utils/crowdHelper";
 import ReportModal from "../components/Home/ReportModal";
-import { Bookmark } from 'lucide-react';
+import { Bookmark,
+  TrendingUp,
+  Users,
+  MapPin,
+  Clock,
+  AlertTriangle,
+  BarChart2,
+  Activity,
+  ArrowUpRight,
+  ArrowDownRight,
+ } from 'lucide-react';
 import type { CrowdLocation } from "../types/crowd";
 import { submitCrowdReport, getLocations, getForecast } from "../api/crowdService";
 import ConfirmReportModal from "../components/Home/ConfirmReportModal";
@@ -81,13 +91,220 @@ function RecenterAutomatically({ location }: { location: any }) {
     if (location) {
       map.flyTo(location.pos, 18, {
         animate: true,
-        duration: 0.7, // Smooth pan duration in seconds
+        duration: 0.7,
       });
     }
   }, [location, map]);
   return null;
 }
 
+// --- Dashboard Component ---
+function DashboardSection() {
+  const analyticsCards = [
+    {
+      label: "Total Reports Today",
+      value: "128",
+      change: "+12%",
+      trend: "up",
+      icon: <Activity size={18} />,
+      color: "#30924C",
+    },
+    {
+      label: "Active Crowd Alerts",
+      value: "3",
+      change: "+1",
+      trend: "up",
+      icon: <AlertTriangle size={18} />,
+      color: "#e17055",
+    },
+    {
+      label: "Avg. Crowd Level",
+      value: "Medium",
+      change: "Stable",
+      trend: "neutral",
+      icon: <Users size={18} />,
+      color: "#0984e3",
+    },
+    {
+      label: "Locations Tracked",
+      value: "24",
+      change: "+2",
+      trend: "up",
+      icon: <MapPin size={18} />,
+      color: "#6c5ce7",
+    },
+  ];
+
+  const recentActivity = [
+    {
+      location: "Cebu City Public Library",
+      level: "Medium",
+      time: "5 mins ago",
+      density: "Medium",
+    },
+    {
+      location: "Vicente Sotto Medical Center",
+      level: "High",
+      time: "2 mins ago",
+      density: "High",
+    },
+    {
+      location: "SM City Cebu",
+      level: "Low",
+      time: "11 mins ago",
+      density: "Low",
+    },
+    {
+      location: "Ayala Center Cebu",
+      level: "High",
+      time: "18 mins ago",
+      density: "High",
+    },
+  ];
+
+  const densityBar = [
+    { label: "Low", pct: 35, color: "#30924C" },
+    { label: "Medium", pct: 45, color: "#fdcb6e" },
+    { label: "High", pct: 20, color: "#e17055" },
+  ];
+
+  return (
+    <div className="dashboard-view">
+      {/* Analytics Cards */}
+      <div className="analytics-grid">
+        {analyticsCards.map((card) => (
+          <div className="analytics-card" key={card.label}>
+            <div className="analytics-card-top">
+              <span
+                className="analytics-icon"
+                style={{ color: card.color, background: `${card.color}18` }}
+              >
+                {card.icon}
+              </span>
+              <span className={`analytics-change ${card.trend}`}>
+                {card.trend === "up" && <ArrowUpRight size={12} />}
+                {card.trend === "down" && <ArrowDownRight size={12} />}
+                {card.change}
+              </span>
+            </div>
+            <strong className="analytics-value">{card.value}</strong>
+            <span className="analytics-label">{card.label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Crowd Distribution */}
+      <div className="dashboard-card">
+        <div className="dashboard-card-header">
+          <div className="dashboard-card-title">
+            <BarChart2 size={16} color="#30924C" />
+            <h3>Crowd Distribution</h3>
+          </div>
+          <span className="dashboard-card-subtitle">Current snapshot</span>
+        </div>
+        <div className="density-bars">
+          {densityBar.map((bar) => (
+            <div className="density-bar-row" key={bar.label}>
+              <span className="density-bar-label">{bar.label}</span>
+              <div className="density-bar-track">
+                <div
+                  className="density-bar-fill"
+                  style={{ width: `${bar.pct}%`, background: bar.color }}
+                />
+              </div>
+              <span className="density-bar-pct">{bar.pct}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Peak Hours Placeholder */}
+      <div className="dashboard-card">
+        <div className="dashboard-card-header">
+          <div className="dashboard-card-title">
+            <TrendingUp size={16} color="#30924C" />
+            <h3>Peak Hours</h3>
+          </div>
+          <span className="dashboard-card-subtitle">Today</span>
+        </div>
+        <div className="peak-hours-chart">
+          {["6am", "8am", "10am", "12pm", "2pm", "4pm", "6pm", "8pm"].map(
+            (label, i) => {
+              const heights = [20, 55, 40, 80, 65, 90, 70, 35];
+              const isActive = i === 5;
+              return (
+                <div className="peak-bar-col" key={label}>
+                  <div className="peak-bar-wrap">
+                    <div
+                      className={`peak-bar ${isActive ? "peak-bar-active" : ""}`}
+                      style={{ height: `${heights[i]}%` }}
+                    />
+                  </div>
+                  <span className="peak-bar-label">{label}</span>
+                </div>
+              );
+            },
+          )}
+        </div>
+      </div>
+
+      {/* Recent Reports */}
+      <div className="dashboard-card">
+        <div className="dashboard-card-header">
+          <div className="dashboard-card-title">
+            <Clock size={16} color="#30924C" />
+            <h3>Recent Reports</h3>
+          </div>
+          <span className="dashboard-card-subtitle">Last 30 min</span>
+        </div>
+        <div className="activity-list">
+          {recentActivity.map((item, i) => (
+            <div className="activity-row" key={i}>
+              <div className="activity-dot-col">
+                <span
+                  className="activity-dot"
+                  style={{
+                    background:
+                      item.density === "High"
+                        ? "#e17055"
+                        : item.density === "Medium"
+                          ? "#fdcb6e"
+                          : "#30924C",
+                  }}
+                />
+              </div>
+              <div className="activity-info">
+                <span className="activity-location">{item.location}</span>
+                <span className="activity-time">{item.time}</span>
+              </div>
+              <span
+                className="activity-level"
+                style={{
+                  color:
+                    item.density === "High"
+                      ? "#e17055"
+                      : item.density === "Medium"
+                        ? "#b7930a"
+                        : "#30924C",
+                  background:
+                    item.density === "High"
+                      ? "#e1705518"
+                      : item.density === "Medium"
+                        ? "#fdcb6e22"
+                        : "#30924C18",
+                }}
+              >
+                {item.level}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- Main Page ---
 export default function UserHomePage() {
   const userType: "admin" | "user" = "user";
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -139,6 +356,7 @@ export default function UserHomePage() {
     setPendingLevel(level);
     setIsConfirmOpen(true);
   };
+  const [activeTab, setActiveTab] = useState<"home" | "dashboard">("home");
 
   const toggleFavorite = (id: number) => {
     setFavoriteIds((prev) =>
@@ -192,17 +410,36 @@ export default function UserHomePage() {
         <p className="welcome-subtitle">Welcome back, Khing</p>
       </header>
 
-      {/* Stats/Info Grid */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <span>Active Alerts</span>
-          <strong>3 Areas</strong>
-        </div>
-        <div className="stat-card">
-          <span>Last Check-in</span>
-          <strong>Downtown</strong>
-        </div>
+      {/* Tab Switcher */}
+      <div className="tab-switcher">
+        <button
+          className={`tab-btn ${activeTab === "home" ? "tab-btn-active" : ""}`}
+          onClick={() => setActiveTab("home")}
+        >
+          Home
+        </button>
+        <button
+          className={`tab-btn ${activeTab === "dashboard" ? "tab-btn-active" : ""}`}
+          onClick={() => setActiveTab("dashboard")}
+        >
+          Dashboard
+        </button>
       </div>
+
+      {/* ── HOME TAB ── */}
+      {activeTab === "home" && (
+        <>
+          {/* Stats/Info Grid */}
+          <div className="stats-grid">
+            <div className="stat-card">
+              <span>Active Alerts</span>
+              <strong>3 Areas</strong>
+            </div>
+            <div className="stat-card">
+              <span>Last Check-in</span>
+              <strong>Downtown</strong>
+            </div>
+          </div>
 
       {/* Dashboard Section */}
       <div className="dashboard-section">
@@ -211,130 +448,117 @@ export default function UserHomePage() {
       </div>
       {/* placeholder for now, can be used for recent reports, check-ins, or favorites later on */}
 
-      {/* Map Section */}
-      <main className="map-section">
-        <MapContainer
-          center={center}
-          zoom={14}
-          className="main-map"
-          style={{ height: "800px", width: "100%" }}
-        >
-          {" "}
-          {/* Add this inline to be sure */}
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" // Clean grey map style
-            attribution="&copy; OpenStreetMap"
-          />
-          {selectedLocation && (
-            <RecenterAutomatically location={selectedLocation} />
-          )}
-          {locations.map((location) => (
-            <Marker
-              key={location.id}
-              position={location.pos as [number, number]}
-              icon={getIconByDensity(location.density)}
-              eventHandlers={{
-                click: () => setSelectedLocation(location),
-              }}
+          {/* Map Section */}
+          <main className="map-section">
+            <MapContainer
+              center={center}
+              zoom={14}
+              className="main-map"
+              style={{ height: "800px", width: "100%" }}
             >
-              <Popup className="custom-popup">
-                <div className="popup-container">
-                  <div className="popup-header">
-                    <div className="badge-wrapper">
-                      <p
-                        style={{
-                          fontSize: "12px",
-                          color: "#30924C",
-                          fontWeight: "bold",
-                          margin: "0 0 4px 0",
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        {location.type}
-                      </p>
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution="&copy; OpenStreetMap"
+              />
+              {selectedLocation && (
+                <RecenterAutomatically location={selectedLocation} />
+              )}
+              {locations.map((location) => (
+                <Marker
+                  key={location.id}
+                  position={location.pos as [number, number]}
+                  icon={getIconByDensity(location.density)}
+                  eventHandlers={{
+                    click: () => setSelectedLocation(location),
+                  }}
+                >
+                  <Popup className="custom-popup">
+                    <div className="popup-container">
+                      <div className="popup-header">
+                        <div className="badge-wrapper">
+                          <p
+                            style={{
+                              fontSize: "12px",
+                              color: "#30924C",
+                              fontWeight: "bold",
+                              margin: "0 0 4px 0",
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            {location.type}
+                          </p>
+                          <button
+                            className="save-link-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFavorite(location.id);
+                            }}
+                          >
+                            <img
+                              src={
+                                favoriteIds.includes(location.id)
+                                  ? "/Favorites Selected.png"
+                                  : "/Favorites.png"
+                              }
+                              alt={
+                                favoriteIds.includes(location.id)
+                                  ? "Saved"
+                                  : "Save"
+                              }
+                              style={{
+                                width: 20,
+                                height: 20,
+                                objectFit: "contain",
+                              }}
+                            />
+                          </button>
+                        </div>
+                        <div className="title-row">
+                          <h2>{location.name}</h2>
+                        </div>
+                        <div className="status-row">
+                          <div className="badge-wrapper">
+                            <span
+                              className={`badge ${densityClasses[location.density]}`}
+                            >
+                              ● {location.density} Crowd Level
+                            </span>
+                            <span className="updated-text">
+                              {location.lastUpdated}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="quieter-nearby">
+                          <strong>Tip:</strong> Lahug Area is currently quieter.
+                        </p>
+                      </div>
+                      <div className="congestion-info">
+                        <h3>Live Insights</h3>
+                        <p>
+                          Based on connection data, wait times are approximately
+                          10-20 minutes.
+                        </p>
+                      </div>
                       <button
-                        className="save-link-btn"
+                        className="input-btn"
                         onClick={(e) => {
                           e.stopPropagation();
-                          toggleFavorite(location.id);
+                          setIsReportModalOpen(true);
                         }}
                       >
-                        <Bookmark
-                          size={18}
-                          fill={
-                            favoriteIds.includes(location.id)
-                              ? "#1f2937"
-                              : "none"
-                          }
-                          stroke="#1f2937"
-                          strokeWidth={2}
-                        />
+                        <span>+</span> Input Crowd Level
                       </button>
                     </div>
-                    <div className="title-row">
-                      <h2>{location.name}</h2>
-                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
+          </main>
+        </>
+      )}
 
-                    <div className="status-row">
-                      <div className="badge-wrapper">
-                        <span
-                          className={`badge ${densityClasses[location.density]}`}
-                        >
-                          ● {location.density} Crowd Level
-                        </span>
-                        <span className="updated-text">{location.lastUpdated}</span>
-                      </div>
-                    </div>
-                    {(() => {
-                      const quieter = locations
-                        .filter(l =>
-                          l.id !== location.id &&
-                          l.type === location.type &&
-                          densityRank[l.density] < densityRank[location.density]
-                        )
-                        .sort((a, b) =>
-                          getDistance(location.pos, a.pos) - getDistance(location.pos, b.pos)
-                        )[0];
-                      return quieter
-                        ? (
-                          <p className="quieter-nearby">
-                            <strong>Tip:</strong> {quieter.name} is currently quieter.
-                          </p>
-                        )
-                        : null;
-                    })()}
-                  </div>
-
-                  <div className="congestion-info">
-                    <h3>Live Insights</h3>
-                    <p>Based on connection data, wait times are approximately {getWaitTime(location.density)}.</p>
-                  </div>
-
-                  {/* Predicted trend sparkline — shown only for the active marker */}
-                  {selectedLocation?.id === location.id && (
-                    popupForecastLoading
-                      ? <p style={{ fontSize: 11, color: "#aaa", margin: "8px 0 0" }}>Loading trend…</p>
-                      : popupForecast && (
-                          <Sparkline slots={popupForecast.slots} modelType={popupForecast.modelType} />
-                        )
-                  )}
-
-                  <button
-                    className="input-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsReportModalOpen(true);
-                      console.log("Modal should be open now.");
-                    }}
-                  >
-                    <span>+</span> Input Crowd Level
-                  </button>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
-      </main>
+      {/* ── DASHBOARD TAB ── */}
+      {activeTab === "dashboard" && <DashboardSection />}
 
       {/* Bottom navigation */}
       <div className="bottom-nav">
@@ -344,7 +568,6 @@ export default function UserHomePage() {
             <p className="nav-text">Home</p>
           </Link>
         </div>
-
         <div className="nav-section">
           <Link to="/favorites" className="nav-item">
             <img src="/Favorites.png" alt="Favorites" className="nav-icon" />
@@ -358,6 +581,7 @@ export default function UserHomePage() {
           </Link>
         </div>
       </div>
+
       <ReportModal
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
