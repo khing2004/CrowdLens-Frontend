@@ -5,7 +5,7 @@ import "./UserHome.css";
 import "../components/Home/CustomPopup.css"
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { densityClasses, getIconByDensity, getWaitTime, densityRank } from "../utils/crowdHelper";
+import { densityClasses, getIconByDensity, getWaitTime, densityRank, getDistance } from "../utils/crowdHelper";
 import ReportModal from "../components/Home/ReportModal";
 import { Bookmark } from 'lucide-react';
 import type { CrowdLocation } from "../types/crowd";
@@ -251,9 +251,15 @@ export default function UserHomePage() {
                     </div>
                     {(() => {
                       const quieter = locations
-                        .filter(l => l.id !== location.id && l.type === location.type)
-                        .sort((a, b) => densityRank[a.density] - densityRank[b.density])[0];
-                      return quieter && densityRank[quieter.density] < densityRank[location.density]
+                        .filter(l =>
+                          l.id !== location.id &&
+                          l.type === location.type &&
+                          densityRank[l.density] < densityRank[location.density]
+                        )
+                        .sort((a, b) =>
+                          getDistance(location.pos, a.pos) - getDistance(location.pos, b.pos)
+                        )[0];
+                      return quieter
                         ? (
                           <p className="quieter-nearby">
                             <strong>Tip:</strong> {quieter.name} is currently quieter.
