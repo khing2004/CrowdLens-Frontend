@@ -3,11 +3,14 @@ import { MapContainer, TileLayer, Marker, useMap, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "./UserHome.css";
 import "../components/Home/CustomPopup.css";
-import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { densityClasses, getIconByDensity, getWaitTime, densityRank, getDistance } from "../utils/crowdHelper";
+import { densityClasses, getIconByDensity, densityRank, getDistance } from "../utils/crowdHelper";
 import ReportModal from "../components/Home/ReportModal";
-import { Bookmark,
+import BottomNav from "../components/BottomNav";
+import { toastSuccess, toastError, toastWarning } from "../components/Toast";
+import { useAuth } from "../context/AuthContext";
+import {
+  Bookmark,
   TrendingUp,
   Users,
   MapPin,
@@ -17,17 +20,14 @@ import { Bookmark,
   Activity,
   ArrowUpRight,
   ArrowDownRight,
- } from 'lucide-react';
+} from "lucide-react";
 import type { CrowdLocation } from "../types/crowd";
 import { submitCrowdReport, getLocations, getForecast } from "../api/crowdService";
 import ConfirmReportModal from "../components/Home/ConfirmReportModal";
 
-
 // ── Forecast mini-chart types ─────────────────────────────────────────────────
 interface ForecastSlot { densityScore: number; isoTime: string; }
 
-// SVG sparkline — renders the next 6 predicted scores as a polyline + dots.
-// No external library needed; safe inside a Leaflet popup.
 function Sparkline({ slots, modelType }: { slots: ForecastSlot[]; modelType: string }) {
   const W = 168, H = 40, PAD = 6;
   const n = slots.length;
@@ -84,15 +84,11 @@ function Sparkline({ slots, modelType }: { slots: ForecastSlot[]; modelType: str
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
-// helper component to handle panning
 function RecenterAutomatically({ location }: { location: any }) {
   const map = useMap();
   useEffect(() => {
     if (location) {
-      map.flyTo(location.pos, 18, {
-        animate: true,
-        duration: 0.7,
-      });
+      map.flyTo(location.pos, 18, { animate: true, duration: 0.7 });
     }
   }, [location, map]);
   return null;
@@ -101,88 +97,36 @@ function RecenterAutomatically({ location }: { location: any }) {
 // --- Dashboard Component ---
 function DashboardSection() {
   const analyticsCards = [
-    {
-      label: "Total Reports Today",
-      value: "128",
-      change: "+12%",
-      trend: "up",
-      icon: <Activity size={18} />,
-      color: "#30924C",
-    },
-    {
-      label: "Active Crowd Alerts",
-      value: "3",
-      change: "+1",
-      trend: "up",
-      icon: <AlertTriangle size={18} />,
-      color: "#e17055",
-    },
-    {
-      label: "Avg. Crowd Level",
-      value: "Medium",
-      change: "Stable",
-      trend: "neutral",
-      icon: <Users size={18} />,
-      color: "#0984e3",
-    },
-    {
-      label: "Locations Tracked",
-      value: "24",
-      change: "+2",
-      trend: "up",
-      icon: <MapPin size={18} />,
-      color: "#6c5ce7",
-    },
+    { label: "Total Reports Today", value: "128", change: "+12%", trend: "up", icon: <Activity size={18} />, color: "#30924C" },
+    { label: "Active Crowd Alerts", value: "3",   change: "+1",   trend: "up", icon: <AlertTriangle size={18} />, color: "#e17055" },
+    { label: "Avg. Crowd Level",    value: "Medium", change: "Stable", trend: "neutral", icon: <Users size={18} />, color: "#0984e3" },
+    { label: "Locations Tracked",   value: "24",  change: "+2",   trend: "up", icon: <MapPin size={18} />, color: "#6c5ce7" },
   ];
 
   const recentActivity = [
-    {
-      location: "Cebu City Public Library",
-      level: "Medium",
-      time: "5 mins ago",
-      density: "Medium",
-    },
-    {
-      location: "Vicente Sotto Medical Center",
-      level: "High",
-      time: "2 mins ago",
-      density: "High",
-    },
-    {
-      location: "SM City Cebu",
-      level: "Low",
-      time: "11 mins ago",
-      density: "Low",
-    },
-    {
-      location: "Ayala Center Cebu",
-      level: "High",
-      time: "18 mins ago",
-      density: "High",
-    },
+    { location: "Cebu City Public Library",    level: "Medium", time: "5 mins ago",  density: "Medium" },
+    { location: "Vicente Sotto Medical Center", level: "High",   time: "2 mins ago",  density: "High" },
+    { location: "SM City Cebu",                level: "Low",    time: "11 mins ago", density: "Low" },
+    { location: "Ayala Center Cebu",           level: "High",   time: "18 mins ago", density: "High" },
   ];
 
   const densityBar = [
-    { label: "Low", pct: 35, color: "#30924C" },
+    { label: "Low",    pct: 35, color: "#30924C" },
     { label: "Medium", pct: 45, color: "#fdcb6e" },
-    { label: "High", pct: 20, color: "#e17055" },
+    { label: "High",   pct: 20, color: "#e17055" },
   ];
 
   return (
     <div className="dashboard-view">
-      {/* Analytics Cards */}
       <div className="analytics-grid">
         {analyticsCards.map((card) => (
           <div className="analytics-card" key={card.label}>
             <div className="analytics-card-top">
-              <span
-                className="analytics-icon"
-                style={{ color: card.color, background: `${card.color}18` }}
-              >
+              <span className="analytics-icon" style={{ color: card.color, background: `${card.color}18` }}>
                 {card.icon}
               </span>
               <span className={`analytics-change ${card.trend}`}>
-                {card.trend === "up" && <ArrowUpRight size={12} />}
+                {card.trend === "up"   && <ArrowUpRight size={12} />}
                 {card.trend === "down" && <ArrowDownRight size={12} />}
                 {card.change}
               </span>
@@ -193,7 +137,6 @@ function DashboardSection() {
         ))}
       </div>
 
-      {/* Crowd Distribution */}
       <div className="dashboard-card">
         <div className="dashboard-card-header">
           <div className="dashboard-card-title">
@@ -207,10 +150,7 @@ function DashboardSection() {
             <div className="density-bar-row" key={bar.label}>
               <span className="density-bar-label">{bar.label}</span>
               <div className="density-bar-track">
-                <div
-                  className="density-bar-fill"
-                  style={{ width: `${bar.pct}%`, background: bar.color }}
-                />
+                <div className="density-bar-fill" style={{ width: `${bar.pct}%`, background: bar.color }} />
               </div>
               <span className="density-bar-pct">{bar.pct}%</span>
             </div>
@@ -218,7 +158,6 @@ function DashboardSection() {
         </div>
       </div>
 
-      {/* Peak Hours Placeholder */}
       <div className="dashboard-card">
         <div className="dashboard-card-header">
           <div className="dashboard-card-title">
@@ -228,27 +167,21 @@ function DashboardSection() {
           <span className="dashboard-card-subtitle">Today</span>
         </div>
         <div className="peak-hours-chart">
-          {["6am", "8am", "10am", "12pm", "2pm", "4pm", "6pm", "8pm"].map(
-            (label, i) => {
-              const heights = [20, 55, 40, 80, 65, 90, 70, 35];
-              const isActive = i === 5;
-              return (
-                <div className="peak-bar-col" key={label}>
-                  <div className="peak-bar-wrap">
-                    <div
-                      className={`peak-bar ${isActive ? "peak-bar-active" : ""}`}
-                      style={{ height: `${heights[i]}%` }}
-                    />
-                  </div>
-                  <span className="peak-bar-label">{label}</span>
+          {["6am", "8am", "10am", "12pm", "2pm", "4pm", "6pm", "8pm"].map((label, i) => {
+            const heights = [20, 55, 40, 80, 65, 90, 70, 35];
+            const isActive = i === 5;
+            return (
+              <div className="peak-bar-col" key={label}>
+                <div className="peak-bar-wrap">
+                  <div className={`peak-bar ${isActive ? "peak-bar-active" : ""}`} style={{ height: `${heights[i]}%` }} />
                 </div>
-              );
-            },
-          )}
+                <span className="peak-bar-label">{label}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* Recent Reports */}
       <div className="dashboard-card">
         <div className="dashboard-card-header">
           <div className="dashboard-card-title">
@@ -261,39 +194,18 @@ function DashboardSection() {
           {recentActivity.map((item, i) => (
             <div className="activity-row" key={i}>
               <div className="activity-dot-col">
-                <span
-                  className="activity-dot"
-                  style={{
-                    background:
-                      item.density === "High"
-                        ? "#e17055"
-                        : item.density === "Medium"
-                          ? "#fdcb6e"
-                          : "#30924C",
-                  }}
-                />
+                <span className="activity-dot" style={{
+                  background: item.density === "High" ? "#e17055" : item.density === "Medium" ? "#fdcb6e" : "#30924C",
+                }} />
               </div>
               <div className="activity-info">
                 <span className="activity-location">{item.location}</span>
                 <span className="activity-time">{item.time}</span>
               </div>
-              <span
-                className="activity-level"
-                style={{
-                  color:
-                    item.density === "High"
-                      ? "#e17055"
-                      : item.density === "Medium"
-                        ? "#b7930a"
-                        : "#30924C",
-                  background:
-                    item.density === "High"
-                      ? "#e1705518"
-                      : item.density === "Medium"
-                        ? "#fdcb6e22"
-                        : "#30924C18",
-                }}
-              >
+              <span className="activity-level" style={{
+                color: item.density === "High" ? "#e17055" : item.density === "Medium" ? "#b7930a" : "#30924C",
+                background: item.density === "High" ? "#e1705518" : item.density === "Medium" ? "#fdcb6e22" : "#30924C18",
+              }}>
                 {item.level}
               </span>
             </div>
@@ -306,20 +218,19 @@ function DashboardSection() {
 
 // --- Main Page ---
 export default function UserHomePage() {
-  const userType: "admin" | "user" = "user";
+  const { user } = useAuth();
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<any>(null);
+  const [selectedLocation, setSelectedLocation] = useState<CrowdLocation | null>(null);
   const [locations, setLocations] = useState<CrowdLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [pendingLevel, setPendingLevel] = useState<string | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
+  const [activeTab, setActiveTab] = useState<"home" | "dashboard">("home");
 
-  // Popup forecast mini-chart state
-  const [popupForecast, setPopupForecast]           = useState<{ slots: ForecastSlot[]; modelType: string } | null>(null);
+  const [popupForecast, setPopupForecast] = useState<{ slots: ForecastSlot[]; modelType: string } | null>(null);
   const [popupForecastLoading, setPopupForecastLoading] = useState(false);
 
-  // Fetch a 6-hour forecast whenever the user clicks a marker
   useEffect(() => {
     if (!selectedLocation) return;
     setPopupForecast(null);
@@ -330,106 +241,83 @@ export default function UserHomePage() {
           setPopupForecast({ slots: data.forecast, modelType: data.modelType ?? "statistical" });
         }
       })
-      .catch(() => {/* silently skip — popup still works without the chart */})
+      .catch(() => {})
       .finally(() => setPopupForecastLoading(false));
   }, [selectedLocation?.id]);
 
   useEffect(() => {
-    const fetchMapData = async () => {
-      try {
-        const data = await getLocations();
-        // Map the backend 'pos' (List<double>) to React's [number, number]
-        setLocations(data);
-      } catch (error) {
-        console.error("Failed to load map data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMapData();
+    getLocations()
+      .then((data) => setLocations(data))
+      .catch(() => toastError("Failed to load map data. Please refresh."))
+      .finally(() => setLoading(false));
   }, []);
 
-  if (loading) {return <div className="loading-screen">Loading CrowdLens Map...</div>;}
+  if (loading) {
+    return <div className="loading-screen">Loading CrowdLens Map...</div>;
+  }
 
   const handleInitialSelect = (level: string) => {
     setPendingLevel(level);
     setIsConfirmOpen(true);
   };
-  const [activeTab, setActiveTab] = useState<"home" | "dashboard">("home");
 
   const toggleFavorite = (id: number) => {
     setFavoriteIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   };
 
   const handleFinalConfirm = async () => {
     if (!selectedLocation || !pendingLevel) return;
-    
-    // Ask the browser for the user's current GPS coordinates
+
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-        
-    console.log(`Report level ${pendingLevel} for location ID ${selectedLocation.id} at coordinates ${lat}, ${lng}`);
-
-    try {
-      await submitCrowdReport(selectedLocation.id, pendingLevel, lat, lng);
-      alert(`Thank you! You reported ${pendingLevel} for ${selectedLocation.name}`);
-      console.log("Report submitted successfully. You are at coordinates:", lat, lng);
-      // Close everything
-      setIsConfirmOpen(false);
-      setIsReportModalOpen(false);
-      
-      // Refresh map data
-      const updatedData = await getLocations();
-      setLocations(updatedData);
-    } catch (error: any) {
-      // Handle the 15-minute cooldown error from backend
-      if (error.response?.status === 400) {
-        alert(error.response.data);
+        try {
+          await submitCrowdReport(selectedLocation.id, pendingLevel, lat, lng);
+          toastSuccess(`Reported ${pendingLevel} for ${selectedLocation.name}`);
+          setIsConfirmOpen(false);
+          setIsReportModalOpen(false);
+          const updatedData = await getLocations();
+          setLocations(updatedData);
+        } catch (error: any) {
+          if (error.response?.status === 400) {
+            toastWarning(error.response.data);
+          } else {
+            toastError("Failed to submit report. Please try again.");
+          }
+          setIsConfirmOpen(false);
+        }
+      },
+      () => {
+        toastError("Unable to access your location. Please allow GPS access to submit a report.");
+        setIsConfirmOpen(false);
       }
-      setIsConfirmOpen(false);
-    }
-  },
-  (error) => {
-    alert("Unable to access your location. Please allow GPS access to submit a report.");
-    setIsConfirmOpen(false);
-  });
+    );
   };
-  // Center of Cebu 
+
   const center: [number, number] = [10.3223, 123.8982];
+  const displayName = user?.name ? user.name.split(" ")[0] : "there";
 
   return (
     <div className="user-home-page">
-      {/* Header Section */}
       <header className="home-header">
         <h1 className="welcome-title">CrowdLens</h1>
-        <p className="welcome-subtitle">Welcome back, Khing</p>
+        <p className="welcome-subtitle">Welcome back, {displayName}</p>
       </header>
 
-      {/* Tab Switcher */}
       <div className="tab-switcher">
-        <button
-          className={`tab-btn ${activeTab === "home" ? "tab-btn-active" : ""}`}
-          onClick={() => setActiveTab("home")}
-        >
+        <button className={`tab-btn ${activeTab === "home" ? "tab-btn-active" : ""}`} onClick={() => setActiveTab("home")}>
           Home
         </button>
-        <button
-          className={`tab-btn ${activeTab === "dashboard" ? "tab-btn-active" : ""}`}
-          onClick={() => setActiveTab("dashboard")}
-        >
+        <button className={`tab-btn ${activeTab === "dashboard" ? "tab-btn-active" : ""}`} onClick={() => setActiveTab("dashboard")}>
           Dashboard
         </button>
       </div>
 
-      {/* ── HOME TAB ── */}
       {activeTab === "home" && (
         <>
-          {/* Stats/Info Grid */}
           <div className="stats-grid">
             <div className="stat-card">
               <span>Active Alerts</span>
@@ -441,75 +329,41 @@ export default function UserHomePage() {
             </div>
           </div>
 
-      {/* Dashboard Section */}
-      <div className="dashboard-section">
-        <h2>Recent Activity</h2>
-        <p>You have no recent activity to display.</p>
-      </div>
-      {/* placeholder for now, can be used for recent reports, check-ins, or favorites later on */}
+          <div className="dashboard-section">
+            <h2>Recent Activity</h2>
+            <p>You have no recent activity to display.</p>
+          </div>
 
-          {/* Map Section */}
           <main className="map-section">
-            <MapContainer
-              center={center}
-              zoom={14}
-              className="main-map"
-              style={{ height: "800px", width: "100%" }}
-            >
+            <MapContainer center={center} zoom={14} className="main-map">
               <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 attribution="&copy; OpenStreetMap"
               />
-              {selectedLocation && (
-                <RecenterAutomatically location={selectedLocation} />
-              )}
+              {selectedLocation && <RecenterAutomatically location={selectedLocation} />}
               {locations.map((location) => (
                 <Marker
                   key={location.id}
                   position={location.pos as [number, number]}
                   icon={getIconByDensity(location.density)}
-                  eventHandlers={{
-                    click: () => setSelectedLocation(location),
-                  }}
+                  eventHandlers={{ click: () => setSelectedLocation(location) }}
                 >
                   <Popup className="custom-popup">
                     <div className="popup-container">
                       <div className="popup-header">
                         <div className="badge-wrapper">
-                          <p
-                            style={{
-                              fontSize: "12px",
-                              color: "#30924C",
-                              fontWeight: "bold",
-                              margin: "0 0 4px 0",
-                              textTransform: "uppercase",
-                            }}
-                          >
+                          <p style={{ fontSize: "12px", color: "#30924C", fontWeight: "bold", margin: "0 0 4px 0", textTransform: "uppercase" }}>
                             {location.type}
                           </p>
                           <button
                             className="save-link-btn"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleFavorite(location.id);
-                            }}
+                            aria-label={favoriteIds.includes(location.id) ? "Remove from favorites" : "Save to favorites"}
+                            onClick={(e) => { e.stopPropagation(); toggleFavorite(location.id); }}
                           >
                             <img
-                              src={
-                                favoriteIds.includes(location.id)
-                                  ? "/Favorites Selected.png"
-                                  : "/Favorites.png"
-                              }
-                              alt={
-                                favoriteIds.includes(location.id)
-                                  ? "Saved"
-                                  : "Save"
-                              }
-                              style={{
-                                width: 20,
-                                height: 20,
-                                objectFit: "contain",
-                              }}
+                              src={favoriteIds.includes(location.id) ? "/Favorites Selected.png" : "/Favorites.png"}
+                              alt=""
+                              style={{ width: 20, height: 20, objectFit: "contain" }}
                             />
                           </button>
                         </div>
@@ -518,14 +372,10 @@ export default function UserHomePage() {
                         </div>
                         <div className="status-row">
                           <div className="badge-wrapper">
-                            <span
-                              className={`badge ${densityClasses[location.density]}`}
-                            >
+                            <span className={`badge ${densityClasses[location.density]}`}>
                               ● {location.density} Crowd Level
                             </span>
-                            <span className="updated-text">
-                              {location.lastUpdated}
-                            </span>
+                            <span className="updated-text">{location.lastUpdated}</span>
                           </div>
                         </div>
                         <p className="quieter-nearby">
@@ -534,17 +384,14 @@ export default function UserHomePage() {
                       </div>
                       <div className="congestion-info">
                         <h3>Live Insights</h3>
-                        <p>
-                          Based on connection data, wait times are approximately
-                          10-20 minutes.
-                        </p>
+                        <p>Based on connection data, wait times are approximately 10-20 minutes.</p>
                       </div>
+                      {popupForecast && selectedLocation?.id === location.id && (
+                        <Sparkline slots={popupForecast.slots} modelType={popupForecast.modelType} />
+                      )}
                       <button
                         className="input-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsReportModalOpen(true);
-                        }}
+                        onClick={(e) => { e.stopPropagation(); setIsReportModalOpen(true); }}
                       >
                         <span>+</span> Input Crowd Level
                       </button>
@@ -557,43 +404,22 @@ export default function UserHomePage() {
         </>
       )}
 
-      {/* ── DASHBOARD TAB ── */}
       {activeTab === "dashboard" && <DashboardSection />}
 
-      {/* Bottom navigation */}
-      <div className="bottom-nav">
-        <div className="nav-section">
-          <Link to="/home" className="nav-item">
-            <img src="/Home Selected.png" alt="Home" className="nav-icon" />
-            <p className="nav-text">Home</p>
-          </Link>
-        </div>
-        <div className="nav-section">
-          <Link to="/favorites" className="nav-item">
-            <img src="/Favorites.png" alt="Favorites" className="nav-icon" />
-            <p className="nav-text">Favorites</p>
-          </Link>
-        </div>
-        <div className="nav-section">
-          <Link to="/settings" className="nav-item">
-            <img src="/Settings.png" alt="Account" className="nav-icon" />
-            <p className="nav-text">Account</p>
-          </Link>
-        </div>
-      </div>
+      <BottomNav />
 
       <ReportModal
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
         locationName={selectedLocation?.name || ""}
-        onSubmit={handleInitialSelect} // trigger confirmation
+        onSubmit={handleInitialSelect}
       />
 
-      <ConfirmReportModal 
+      <ConfirmReportModal
         isOpen={isConfirmOpen}
         level={pendingLevel || ""}
         onClose={() => setIsConfirmOpen(false)}
-        onConfirm={handleFinalConfirm} // Triggers the actual API call
+        onConfirm={handleFinalConfirm}
       />
     </div>
   );

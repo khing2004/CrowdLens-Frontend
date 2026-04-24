@@ -87,7 +87,7 @@
 /* Map Styling */
 .map-section {
   flex: 1;
-  min-height: 400px;
+  height: 800px;
   margin: 0 20px 100px;
   border-radius: 20px;
   overflow: hidden;
@@ -98,6 +98,22 @@
 .main-map {
   height: 100%;
   width: 100%;
+}
+
+@media (max-width: 768px) {
+  .map-section {
+    height: 60vh;
+    min-height: 320px;
+    margin: 0 12px 100px;
+  }
+}
+
+@media (max-width: 480px) {
+  .map-section {
+    height: 55vh;
+    margin: 0 8px 100px;
+    border-radius: 14px;
+  }
 }
 
 /* Custom Marker CSS */
@@ -116,70 +132,6 @@
 
 .custom-div-icon { background: transparent; border: none; }
 
-/* Bottom Nav */
-.bottom-nav {
-  z-index: 1000;
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  height: 70px;
-  background: white;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
-}
-
-.nav-btn {
-  background: none;
-  border: none;
-  font-weight: 600;
-  color: #b2bec3;
-  cursor: pointer;
-}
-
-.nav-btn.active {
-  color: #30924C;
-}
-
-.nav-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.nav-icon {
-  height: 36px;
-  width: 36px;
-  object-fit: contain;
-}
-
-.nav-item,
-.nav-item:link,
-.nav-item:visited,
-.nav-item:hover,
-.nav-item:active {
-  color: inherit;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.nav-item {
-  font-size: 12px;
-  margin: 0;
-  text-align: center;
-  width: 100%;
-}
-
-.nav-text {
-  font-size: 12px;
-  margin: 0;
-  text-align: center;
-  width: 100%;
-}
 
 /* ══════════════════════════════════
    DASHBOARD STYLES
