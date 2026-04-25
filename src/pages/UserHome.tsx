@@ -3,36 +3,84 @@ import { MapContainer, TileLayer, Marker, useMap, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "./UserHome.css";
 import "../components/Home/CustomPopup.css";
-import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { densityClasses, getIconByDensity, getWaitTime, densityRank, getDistance } from "../utils/crowdHelper";
+import { densityClasses, getIconByDensity } from "../utils/crowdHelper";
 import ReportModal from "../components/Home/ReportModal";
-import { Bookmark } from 'lucide-react';
-import type { CrowdLocation } from "../types/crowd";
-import { submitCrowdReport, getLocations, getForecast } from "../api/crowdService";
+import BottomNav from "../components/BottomNav";
+import { toastSuccess, toastError, toastWarning } from "../components/Toast";
+import { useAuth } from "../context/AuthContext";
+import {
+  TrendingUp,
+  Users,
+  MapPin,
+  Clock,
+  AlertTriangle,
+  BarChart2,
+  Activity,
+  ArrowUpRight,
+  ArrowDownRight,
+} from "lucide-react";
+import type { CrowdLocation, density } from "../types/crowd";
+import {
+  submitCrowdReport,
+  getLocations,
+  getForecast,
+  getRecentReports,
+  addFavorite,
+  removeFavorite,
+  getFavorites,
+  type RecentReport,
+} from "../api/crowdService";
 import ConfirmReportModal from "../components/Home/ConfirmReportModal";
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-// ── Forecast mini-chart types ─────────────────────────────────────────────────
+const DENSITY_SCORE: Record<density, number> = {
+  "Very Low": 1, "Low": 2, "Medium": 3, "High": 4, "Very High": 5,
+};
+
+function avgDensityLabel(locations: CrowdLocation[]): string {
+  if (locations.length === 0) return "—";
+  const avg = locations.reduce((sum, l) => sum + DENSITY_SCORE[l.density], 0) / locations.length;
+  if (avg <= 1.5) return "Very Low";
+  if (avg <= 2.5) return "Low";
+  if (avg <= 3.5) return "Medium";
+  if (avg <= 4.5) return "High";
+  return "Very High";
+}
+
+function timeAgo(isoStr: string): string {
+  const mins = Math.floor((Date.now() - new Date(isoStr).getTime()) / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins} min ago`;
+  return `${Math.floor(mins / 60)} hr ago`;
+}
+
+const DENSITY_COLOR: Record<string, string> = {
+  "Very High": "#b71c1c",
+  "High":      "#e17055",
+  "Medium":    "#fdcb6e",
+  "Low":       "#30924C",
+  "Very Low":  "#84cc16",
+};
+
+// ── Forecast mini-chart ───────────────────────────────────────────────────────
+
 interface ForecastSlot { densityScore: number; isoTime: string; }
 
-// SVG sparkline — renders the next 6 predicted scores as a polyline + dots.
-// No external library needed; safe inside a Leaflet popup.
 function Sparkline({ slots, modelType }: { slots: ForecastSlot[]; modelType: string }) {
   const W = 168, H = 40, PAD = 6;
   const n = slots.length;
   if (n < 2) return null;
 
   const scoreColors: Record<number, string> = {
-    1: "#4caf50", 2: "#8bc34a", 3: "#ff9800", 4: "#f44336", 5: "#b71c1c"
+    1: "#4caf50", 2: "#8bc34a", 3: "#ff9800", 4: "#f44336", 5: "#b71c1c",
   };
-
-  const pts = slots.map((s, i) => {
-    const x = PAD + (i / (n - 1)) * (W - PAD * 2);
-    const y = PAD + ((5 - s.densityScore) / 4) * (H - PAD * 2);
-    return { x, y, score: s.densityScore };
-  });
-
+  const pts = slots.map((s, i) => ({
+    x: PAD + (i / (n - 1)) * (W - PAD * 2),
+    y: PAD + ((5 - s.densityScore) / 4) * (H - PAD * 2),
+    score: s.densityScore,
+  }));
   const polyline = pts.map(p => `${p.x},${p.y}`).join(" ");
   const peakScore = Math.max(...slots.map(s => s.densityScore));
   const lineColor = scoreColors[peakScore] ?? "#30924C";
@@ -45,7 +93,7 @@ function Sparkline({ slots, modelType }: { slots: ForecastSlot[]; modelType: str
         <span style={{
           marginLeft: 6, padding: "1px 6px", borderRadius: 10, fontSize: 9, fontWeight: 700,
           background: isLSTM ? "#e8eaf6" : "#e0f2f1",
-          color: isLSTM ? "#3949ab" : "#00695c"
+          color: isLSTM ? "#3949ab" : "#00695c",
         }}>
           {isLSTM ? "⚡ LSTM" : "📊 Statistical"}
         </span>
@@ -60,8 +108,7 @@ function Sparkline({ slots, modelType }: { slots: ForecastSlot[]; modelType: str
       </svg>
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
         {slots.map((s, i) => {
-          const d = new Date(s.isoTime);
-          const h = d.getHours();
+          const h = new Date(s.isoTime).getHours();
           return (
             <span key={i} style={{ fontSize: 9, color: "#aaa", width: `${100 / n}%`, textAlign: "center" }}>
               {h % 12 === 0 ? 12 : h % 12}{h >= 12 ? "p" : "a"}
@@ -72,37 +119,224 @@ function Sparkline({ slots, modelType }: { slots: ForecastSlot[]; modelType: str
     </div>
   );
 }
-// ─────────────────────────────────────────────────────────────────────────────
 
-// helper component to handle panning
-function RecenterAutomatically({ location }: { location: any }) {
+// ── Map helper ────────────────────────────────────────────────────────────────
+
+function RecenterAutomatically({ location }: { location: CrowdLocation }) {
   const map = useMap();
   useEffect(() => {
-    if (location) {
-      map.flyTo(location.pos, 18, {
-        animate: true,
-        duration: 0.7, // Smooth pan duration in seconds
-      });
-    }
+    map.flyTo(location.pos, 18, { animate: true, duration: 0.7 });
   }, [location, map]);
   return null;
 }
 
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+
+interface DashboardSectionProps {
+  locations: CrowdLocation[];
+}
+
+function DashboardSection({ locations }: DashboardSectionProps) {
+  const [recentReports, setRecentReports] = useState<RecentReport[]>([]);
+  const [reportsLoading, setReportsLoading] = useState(true);
+
+  useEffect(() => {
+    getRecentReports()
+      .then(setRecentReports)
+      .catch(() => {})
+      .finally(() => setReportsLoading(false));
+  }, []);
+
+  // Compute stats from live locations data
+  const alertCount = locations.filter(l => l.density === "High" || l.density === "Very High").length;
+  const avgLevel   = avgDensityLabel(locations);
+  const total      = locations.length || 1;
+  const lowCount   = locations.filter(l => l.density === "Very Low" || l.density === "Low").length;
+  const midCount   = locations.filter(l => l.density === "Medium").length;
+  const highCount  = locations.filter(l => l.density === "High" || l.density === "Very High").length;
+
+  const analyticsCards = [
+    {
+      label: "Active Crowd Alerts",
+      value: String(alertCount),
+      change: alertCount > 0 ? "Needs attention" : "All clear",
+      trend: alertCount > 0 ? "up" : "neutral",
+      icon: <AlertTriangle size={18} />,
+      color: "#e17055",
+    },
+    {
+      label: "Avg. Crowd Level",
+      value: avgLevel,
+      change: "Live",
+      trend: "neutral",
+      icon: <Users size={18} />,
+      color: "#0984e3",
+    },
+    {
+      label: "Locations Tracked",
+      value: String(locations.length),
+      change: "Live",
+      trend: "neutral",
+      icon: <MapPin size={18} />,
+      color: "#6c5ce7",
+    },
+    {
+      label: "Recent Reports",
+      value: reportsLoading ? "…" : String(recentReports.length),
+      change: "Last 30 min",
+      trend: "neutral",
+      icon: <Activity size={18} />,
+      color: "#30924C",
+    },
+  ];
+
+  const densityBar = [
+    { label: "Low",    pct: Math.round((lowCount  / total) * 100), color: "#30924C" },
+    { label: "Medium", pct: Math.round((midCount  / total) * 100), color: "#fdcb6e" },
+    { label: "High",   pct: Math.round((highCount / total) * 100), color: "#e17055" },
+  ];
+
+  return (
+    <div className="dashboard-view">
+      {/* Analytics Cards */}
+      <div className="analytics-grid">
+        {analyticsCards.map((card) => (
+          <div className="analytics-card" key={card.label}>
+            <div className="analytics-card-top">
+              <span className="analytics-icon" style={{ color: card.color, background: `${card.color}18` }}>
+                {card.icon}
+              </span>
+              <span className={`analytics-change ${card.trend}`}>
+                {card.trend === "up"   && <ArrowUpRight size={12} />}
+                {card.trend === "down" && <ArrowDownRight size={12} />}
+                {card.change}
+              </span>
+            </div>
+            <strong className="analytics-value">{card.value}</strong>
+            <span className="analytics-label">{card.label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Crowd Distribution — derived from live locations */}
+      <div className="dashboard-card">
+        <div className="dashboard-card-header">
+          <div className="dashboard-card-title">
+            <BarChart2 size={16} color="#30924C" />
+            <h3>Crowd Distribution</h3>
+          </div>
+          <span className="dashboard-card-subtitle">Current snapshot · {locations.length} locations</span>
+        </div>
+        <div className="density-bars">
+          {densityBar.map((bar) => (
+            <div className="density-bar-row" key={bar.label}>
+              <span className="density-bar-label">{bar.label}</span>
+              <div className="density-bar-track">
+                <div className="density-bar-fill" style={{ width: `${bar.pct}%`, background: bar.color }} />
+              </div>
+              <span className="density-bar-pct">{bar.pct}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Peak Hours — visual placeholder until backend aggregation endpoint is available */}
+      <div className="dashboard-card">
+        <div className="dashboard-card-header">
+          <div className="dashboard-card-title">
+            <TrendingUp size={16} color="#30924C" />
+            <h3>Peak Hours</h3>
+          </div>
+          <span className="dashboard-card-subtitle">Today</span>
+        </div>
+        <div className="peak-hours-chart">
+          {["6am", "8am", "10am", "12pm", "2pm", "4pm", "6pm", "8pm"].map((label, i) => {
+            const heights = [20, 55, 40, 80, 65, 90, 70, 35];
+            const isActive = i === 5;
+            return (
+              <div className="peak-bar-col" key={label}>
+                <div className="peak-bar-wrap">
+                  <div className={`peak-bar ${isActive ? "peak-bar-active" : ""}`} style={{ height: `${heights[i]}%` }} />
+                </div>
+                <span className="peak-bar-label">{label}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Recent Reports — from API */}
+      <div className="dashboard-card">
+        <div className="dashboard-card-header">
+          <div className="dashboard-card-title">
+            <Clock size={16} color="#30924C" />
+            <h3>Recent Reports</h3>
+          </div>
+          <span className="dashboard-card-subtitle">Last 30 min</span>
+        </div>
+        <div className="activity-list">
+          {reportsLoading && (
+            <p className="dashboard-loading">Loading reports…</p>
+          )}
+          {!reportsLoading && recentReports.length === 0 && (
+            <p className="dashboard-empty">No recent reports.</p>
+          )}
+          {recentReports.map((item, i) => {
+            const color = DENSITY_COLOR[item.densityLevel] ?? "#30924C";
+            return (
+              <div className="activity-row" key={i}>
+                <div className="activity-dot-col">
+                  <span className="activity-dot" style={{ background: color }} />
+                </div>
+                <div className="activity-info">
+                  <span className="activity-location">{item.locationName}</span>
+                  <span className="activity-time">{timeAgo(item.reportedAt)}</span>
+                </div>
+                <span className="activity-level" style={{
+                  color,
+                  background: `${color}18`,
+                }}>
+                  {item.densityLevel}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
+
 export default function UserHomePage() {
-  const userType: "admin" | "user" = "user";
+  const { user } = useAuth();
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<any>(null);
+  const [selectedLocation, setSelectedLocation] = useState<CrowdLocation | null>(null);
   const [locations, setLocations] = useState<CrowdLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [pendingLevel, setPendingLevel] = useState<string | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
+  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
+  const [activeTab, setActiveTab] = useState<"home" | "dashboard">("home");
 
-  // Popup forecast mini-chart state
-  const [popupForecast, setPopupForecast]           = useState<{ slots: ForecastSlot[]; modelType: string } | null>(null);
+  const [popupForecast, setPopupForecast] = useState<{ slots: ForecastSlot[]; modelType: string } | null>(null);
   const [popupForecastLoading, setPopupForecastLoading] = useState(false);
 
-  // Fetch a 6-hour forecast whenever the user clicks a marker
+  // Load locations and saved favorites in parallel on mount
+  useEffect(() => {
+    Promise.all([
+      getLocations(),
+      getFavorites().catch(() => [] as CrowdLocation[]),
+    ]).then(([locs, favs]) => {
+      setLocations(locs);
+      setFavoriteIds(new Set(favs.map(f => f.id)));
+    }).catch(() => {
+      toastError("Failed to load map data. Please refresh.");
+    }).finally(() => setLoading(false));
+  }, []);
+
+  // Fetch popup forecast when a marker is clicked
   useEffect(() => {
     if (!selectedLocation) return;
     setPopupForecast(null);
@@ -113,263 +347,199 @@ export default function UserHomePage() {
           setPopupForecast({ slots: data.forecast, modelType: data.modelType ?? "statistical" });
         }
       })
-      .catch(() => {/* silently skip — popup still works without the chart */})
+      .catch(() => {})
       .finally(() => setPopupForecastLoading(false));
   }, [selectedLocation?.id]);
 
-  useEffect(() => {
-    const fetchMapData = async () => {
-      try {
-        const data = await getLocations();
-        // Map the backend 'pos' (List<double>) to React's [number, number]
-        setLocations(data);
-      } catch (error) {
-        console.error("Failed to load map data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMapData();
-  }, []);
-
-  if (loading) {return <div className="loading-screen">Loading CrowdLens Map...</div>;}
+  if (loading) {
+    return <div className="loading-screen">Loading CrowdLens Map…</div>;
+  }
 
   const handleInitialSelect = (level: string) => {
     setPendingLevel(level);
     setIsConfirmOpen(true);
   };
 
-  const toggleFavorite = (id: number) => {
-    setFavoriteIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
-    );
+  // Optimistic toggle — updates UI instantly, reverts if the API call fails
+  const toggleFavorite = async (id: number) => {
+    const wasFav = favoriteIds.has(id);
+    setFavoriteIds(prev => {
+      const next = new Set(prev);
+      wasFav ? next.delete(id) : next.add(id);
+      return next;
+    });
+    try {
+      if (wasFav) {
+        await removeFavorite(id);
+        toastSuccess("Removed from favorites.");
+      } else {
+        await addFavorite(id);
+        toastSuccess("Saved to favorites!");
+      }
+    } catch {
+      // Revert optimistic change on failure
+      setFavoriteIds(prev => {
+        const next = new Set(prev);
+        wasFav ? next.add(id) : next.delete(id);
+        return next;
+      });
+      toastError("Failed to update favorites.");
+    }
   };
 
   const handleFinalConfirm = async () => {
     if (!selectedLocation || !pendingLevel) return;
-    
-    // Ask the browser for the user's current GPS coordinates
+
     navigator.geolocation.getCurrentPosition(
       async (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        
-    console.log(`Report level ${pendingLevel} for location ID ${selectedLocation.id} at coordinates ${lat}, ${lng}`);
-
-    try {
-      await submitCrowdReport(selectedLocation.id, pendingLevel, lat, lng);
-      alert(`Thank you! You reported ${pendingLevel} for ${selectedLocation.name}`);
-      console.log("Report submitted successfully. You are at coordinates:", lat, lng);
-      // Close everything
-      setIsConfirmOpen(false);
-      setIsReportModalOpen(false);
-      
-      // Refresh map data
-      const updatedData = await getLocations();
-      setLocations(updatedData);
-    } catch (error: any) {
-      // Handle the 15-minute cooldown error from backend
-      if (error.response?.status === 400) {
-        alert(error.response.data);
+        const { latitude: lat, longitude: lng } = position.coords;
+        try {
+          await submitCrowdReport(selectedLocation.id, pendingLevel, lat, lng);
+          toastSuccess(`Reported ${pendingLevel} for ${selectedLocation.name}`);
+          setIsConfirmOpen(false);
+          setIsReportModalOpen(false);
+          const updatedData = await getLocations();
+          setLocations(updatedData);
+        } catch (error: any) {
+          if (error.response?.status === 400) {
+            toastWarning(error.response.data);
+          } else {
+            toastError("Failed to submit report. Please try again.");
+          }
+          setIsConfirmOpen(false);
+        }
+      },
+      () => {
+        toastError("Unable to access your location. Please allow GPS access to submit a report.");
+        setIsConfirmOpen(false);
       }
-      setIsConfirmOpen(false);
-    }
-  },
-  (error) => {
-    alert("Unable to access your location. Please allow GPS access to submit a report.");
-    setIsConfirmOpen(false);
-  });
+    );
   };
-  // Center of Cebu 
+
   const center: [number, number] = [10.3223, 123.8982];
+  const displayName = user?.name ? user.name.split(" ")[0] : "there";
 
   return (
     <div className="user-home-page">
-      {/* Header Section */}
       <header className="home-header">
         <h1 className="welcome-title">CrowdLens</h1>
-        <p className="welcome-subtitle">Welcome back, Khing</p>
+        <p className="welcome-subtitle">Welcome back, {displayName}</p>
       </header>
 
-      {/* Stats/Info Grid */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <span>Active Alerts</span>
-          <strong>3 Areas</strong>
-        </div>
-        <div className="stat-card">
-          <span>Last Check-in</span>
-          <strong>Downtown</strong>
-        </div>
-      </div>
-
-      {/* Dashboard Section */}
-      <div className="dashboard-section">
-        <h2>Recent Activity</h2>
-        <p>You have no recent activity to display.</p>
-      </div>
-      {/* placeholder for now, can be used for recent reports, check-ins, or favorites later on */}
-
-      {/* Map Section */}
-      <main className="map-section">
-        <MapContainer
-          center={center}
-          zoom={14}
-          className="main-map"
-          style={{ height: "800px", width: "100%" }}
+      <div className="tab-switcher">
+        <button
+          className={`tab-btn ${activeTab === "home" ? "tab-btn-active" : ""}`}
+          onClick={() => setActiveTab("home")}
         >
-          {" "}
-          {/* Add this inline to be sure */}
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" // Clean grey map style
-            attribution="&copy; OpenStreetMap"
-          />
-          {selectedLocation && (
-            <RecenterAutomatically location={selectedLocation} />
-          )}
-          {locations.map((location) => (
-            <Marker
-              key={location.id}
-              position={location.pos as [number, number]}
-              icon={getIconByDensity(location.density)}
-              eventHandlers={{
-                click: () => setSelectedLocation(location),
-              }}
-            >
-              <Popup className="custom-popup">
-                <div className="popup-container">
-                  <div className="popup-header">
-                    <div className="badge-wrapper">
-                      <p
-                        style={{
-                          fontSize: "12px",
-                          color: "#30924C",
-                          fontWeight: "bold",
-                          margin: "0 0 4px 0",
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        {location.type}
-                      </p>
+          Home
+        </button>
+        <button
+          className={`tab-btn ${activeTab === "dashboard" ? "tab-btn-active" : ""}`}
+          onClick={() => setActiveTab("dashboard")}
+        >
+          Dashboard
+        </button>
+      </div>
+
+      {/* ── HOME TAB ── */}
+      {activeTab === "home" && (
+        <>
+          <div className="stats-grid">
+            <div className="stat-card">
+              <span>Active Alerts</span>
+              <strong>
+                {locations.filter(l => l.density === "High" || l.density === "Very High").length} Areas
+              </strong>
+            </div>
+            <div className="stat-card">
+              <span>Locations</span>
+              <strong>{locations.length} Tracked</strong>
+            </div>
+          </div>
+
+          <main className="map-section">
+            <MapContainer center={center} zoom={14} className="main-map">
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution="&copy; OpenStreetMap"
+              />
+              {selectedLocation && <RecenterAutomatically location={selectedLocation} />}
+              {locations.map((location) => (
+                <Marker
+                  key={location.id}
+                  position={location.pos as [number, number]}
+                  icon={getIconByDensity(location.density)}
+                  eventHandlers={{ click: () => setSelectedLocation(location) }}
+                >
+                  <Popup className="custom-popup">
+                    <div className="popup-container">
+                      <div className="popup-header">
+                        <div className="badge-wrapper">
+                          <p style={{ fontSize: "12px", color: "#30924C", fontWeight: "bold", margin: "0 0 4px 0", textTransform: "uppercase" }}>
+                            {location.type}
+                          </p>
+                          <button
+                            className="save-link-btn"
+                            aria-label={favoriteIds.has(location.id) ? "Remove from favorites" : "Save to favorites"}
+                            onClick={(e) => { e.stopPropagation(); toggleFavorite(location.id); }}
+                          >
+                            <img
+                              src={favoriteIds.has(location.id) ? "/Favorites Selected.png" : "/Favorites.png"}
+                              alt=""
+                              style={{ width: 20, height: 20, objectFit: "contain" }}
+                            />
+                          </button>
+                        </div>
+                        <div className="title-row">
+                          <h2>{location.name}</h2>
+                        </div>
+                        <div className="status-row">
+                          <div className="badge-wrapper">
+                            <span className={`badge ${densityClasses[location.density]}`}>
+                              ● {location.density} Crowd Level
+                            </span>
+                            <span className="updated-text">{location.lastUpdated}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="congestion-info">
+                        <h3>Live Insights</h3>
+                        <p>Based on connection data, wait times are approximately 10–20 minutes.</p>
+                      </div>
+                      {popupForecast && selectedLocation?.id === location.id && (
+                        <Sparkline slots={popupForecast.slots} modelType={popupForecast.modelType} />
+                      )}
                       <button
-                        className="save-link-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleFavorite(location.id);
-                        }}
+                        className="input-btn"
+                        onClick={(e) => { e.stopPropagation(); setIsReportModalOpen(true); }}
                       >
-                        <Bookmark
-                          size={18}
-                          fill={
-                            favoriteIds.includes(location.id)
-                              ? "#1f2937"
-                              : "none"
-                          }
-                          stroke="#1f2937"
-                          strokeWidth={2}
-                        />
+                        <span>+</span> Input Crowd Level
                       </button>
                     </div>
-                    <div className="title-row">
-                      <h2>{location.name}</h2>
-                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
+          </main>
+        </>
+      )}
 
-                    <div className="status-row">
-                      <div className="badge-wrapper">
-                        <span
-                          className={`badge ${densityClasses[location.density]}`}
-                        >
-                          ● {location.density} Crowd Level
-                        </span>
-                        <span className="updated-text">{location.lastUpdated}</span>
-                      </div>
-                    </div>
-                    {(() => {
-                      const quieter = locations
-                        .filter(l =>
-                          l.id !== location.id &&
-                          l.type === location.type &&
-                          densityRank[l.density] < densityRank[location.density]
-                        )
-                        .sort((a, b) =>
-                          getDistance(location.pos, a.pos) - getDistance(location.pos, b.pos)
-                        )[0];
-                      return quieter
-                        ? (
-                          <p className="quieter-nearby">
-                            <strong>Tip:</strong> {quieter.name} is currently quieter.
-                          </p>
-                        )
-                        : null;
-                    })()}
-                  </div>
+      {/* ── DASHBOARD TAB ── */}
+      {activeTab === "dashboard" && <DashboardSection locations={locations} />}
 
-                  <div className="congestion-info">
-                    <h3>Live Insights</h3>
-                    <p>Based on connection data, wait times are approximately {getWaitTime(location.density)}.</p>
-                  </div>
+      <BottomNav />
 
-                  {/* Predicted trend sparkline — shown only for the active marker */}
-                  {selectedLocation?.id === location.id && (
-                    popupForecastLoading
-                      ? <p style={{ fontSize: 11, color: "#aaa", margin: "8px 0 0" }}>Loading trend…</p>
-                      : popupForecast && (
-                          <Sparkline slots={popupForecast.slots} modelType={popupForecast.modelType} />
-                        )
-                  )}
-
-                  <button
-                    className="input-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsReportModalOpen(true);
-                      console.log("Modal should be open now.");
-                    }}
-                  >
-                    <span>+</span> Input Crowd Level
-                  </button>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
-      </main>
-
-      {/* Bottom navigation */}
-      <div className="bottom-nav">
-        <div className="nav-section">
-          <Link to="/home" className="nav-item">
-            <img src="/Home Selected.png" alt="Home" className="nav-icon" />
-            <p className="nav-text">Home</p>
-          </Link>
-        </div>
-
-        <div className="nav-section">
-          <Link to="/favorites" className="nav-item">
-            <img src="/Favorites.png" alt="Favorites" className="nav-icon" />
-            <p className="nav-text">Favorites</p>
-          </Link>
-        </div>
-        <div className="nav-section">
-          <Link to="/settings" className="nav-item">
-            <img src="/Settings.png" alt="Account" className="nav-icon" />
-            <p className="nav-text">Account</p>
-          </Link>
-        </div>
-      </div>
       <ReportModal
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
         locationName={selectedLocation?.name || ""}
-        onSubmit={handleInitialSelect} // trigger confirmation
+        onSubmit={handleInitialSelect}
       />
-
-      <ConfirmReportModal 
+      <ConfirmReportModal
         isOpen={isConfirmOpen}
         level={pendingLevel || ""}
         onClose={() => setIsConfirmOpen(false)}
-        onConfirm={handleFinalConfirm} // Triggers the actual API call
+        onConfirm={handleFinalConfirm}
       />
     </div>
   );

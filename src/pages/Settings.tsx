@@ -1,20 +1,17 @@
 import "./Settings.css";
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { authService } from "../api/authService";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import BottomNav from "../components/BottomNav";
 
 export default function Settings() {
-  const userType: "admin" | "user" = "user"; // TODO: replace with real user type from auth context
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [locationEnabled, setLocationEnabled] = useState(true);
-  const [pendingLocationEnabled, setPendingLocationEnabled] =
-    useState(locationEnabled);
-  const [notificationsSetting, setNotificationsSetting] = useState<
-    "All" | "Mentions" | "None"
-  >("All");
-  const [pendingNotificationsSetting, setPendingNotificationsSetting] =
-    useState<"All" | "Mentions" | "None">("All");
+  const [pendingLocationEnabled, setPendingLocationEnabled] = useState(locationEnabled);
+  const [notificationsSetting, setNotificationsSetting] = useState<"All" | "Mentions" | "None">("All");
+  const [pendingNotificationsSetting, setPendingNotificationsSetting] = useState<"All" | "Mentions" | "None">("All");
 
   const panelRef = useRef<HTMLDivElement | null>(null);
 
@@ -50,18 +47,9 @@ export default function Settings() {
     setActivePanel(null);
 
     switch (item) {
-      case "Profile":
-        navigate("/profile");
-        break;
-      case "Privacy Policy":
-        window.open("/privacy-policy", "_blank");
-        break;
-      case "Terms of Service":
-        window.open("/terms-of-service", "_blank");
-        break;
       case "Logout":
-        console.log("Logout clicked");
-        navigate("/login");
+        logout();
+        navigate("/");
         break;
       default:
         break;
@@ -76,10 +64,9 @@ export default function Settings() {
     { label: "Terms of Service", icon: "📄" },
   ];
 
-  const handleLogout = () => {
-    authService.logout();
-    navigate("/login");
-  };
+  const isAdmin = user?.role === "admin" || user?.role === "Admin";
+  const displayName = user?.name ?? "—";
+  const displayEmail = user?.email ?? "—";
 
   return (
     <div className="settings-page">
@@ -153,20 +140,10 @@ export default function Settings() {
                     </button>
                   </div>
                   <div className="panel-actions">
-                    <button
-                      onClick={() => {
-                        setLocationEnabled(pendingLocationEnabled);
-                        setActivePanel(null);
-                      }}
-                    >
+                    <button onClick={() => { setLocationEnabled(pendingLocationEnabled); setActivePanel(null); }}>
                       Save
                     </button>
-                    <button
-                      onClick={() => {
-                        setPendingLocationEnabled(locationEnabled);
-                        setActivePanel(null);
-                      }}
-                    >
+                    <button onClick={() => { setPendingLocationEnabled(locationEnabled); setActivePanel(null); }}>
                       Cancel
                     </button>
                   </div>
@@ -200,20 +177,10 @@ export default function Settings() {
                     ))}
                   </fieldset>
                   <div className="panel-actions">
-                    <button
-                      onClick={() => {
-                        setNotificationsSetting(pendingNotificationsSetting);
-                        setActivePanel(null);
-                      }}
-                    >
+                    <button onClick={() => { setNotificationsSetting(pendingNotificationsSetting); setActivePanel(null); }}>
                       Save
                     </button>
-                    <button
-                      onClick={() => {
-                        setPendingNotificationsSetting(notificationsSetting);
-                        setActivePanel(null);
-                      }}
-                    >
+                    <button onClick={() => { setPendingNotificationsSetting(notificationsSetting); setActivePanel(null); }}>
                       Cancel
                     </button>
                   </div>

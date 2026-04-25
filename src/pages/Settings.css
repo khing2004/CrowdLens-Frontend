@@ -405,3 +405,20 @@
   text-align: center;
   width: 100%;
 }
+
+.settings-action-logout {
+  color: #dc2626 !important;
+  border-color: #fca5a5 !important;
+}
+
+.settings-action-logout:hover {
+  background: #fef2f2 !important;
+}
+
+.profile-picture {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: contain;
+  border: 3px solid #e8f5ec;
+}
