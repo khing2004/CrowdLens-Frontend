@@ -119,6 +119,19 @@
   }
 }
 
+/* Full-page loading state */
+.loading-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #30924C;
+  background: url('/Image2.png') no-repeat center/cover;
+}
+
 /* Custom Marker CSS */
 .pulse-marker {
   width: 12px;
