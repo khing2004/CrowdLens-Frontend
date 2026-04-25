@@ -25,6 +25,7 @@ export interface CrowdLocation {
     "High": number;
     "Very High": number;
   };
+  alertThreshold?: string; // only present on favorites responses
 }
 
 // used in ReportModal.tsx
