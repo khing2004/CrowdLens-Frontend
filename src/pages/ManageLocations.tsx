@@ -1,6 +1,6 @@
 import "./ManageLocations.css";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import BottomNav from "../components/BottomNav";
 
 type AvailableLocation = {
   id: number;
@@ -61,30 +61,7 @@ export default function ManageLocations() {
         <button className="update-button">Update Location</button>
       </div>
 
-      <div className="bottom-nav">
-        <div className="nav-section">
-          <Link to="/home" className="nav-item">
-            <img src="/Home.png" alt="Home" className="nav-icon" />
-            <p className="nav-text">Home</p>
-          </Link>
-        </div>
-        <div className="nav-section">
-          <Link to="/favorites" className="nav-item">
-            <img src="/Favorites.png" alt="Favorites" className="nav-icon" />
-            <p className="nav-text">Favorites</p>
-          </Link>
-        </div>
-        <div className="nav-section">
-          <Link to="/settings" className="nav-item">
-            <img
-              src="/Settings Selected.png"
-              alt="Account"
-              className="nav-icon"
-            />
-            <p className="nav-text">Account</p>
-          </Link>
-        </div>
-      </div>
+      <BottomNav />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import "./Profile.css";
 
 interface ProfileData {
@@ -24,11 +25,12 @@ const PRONOUNS_OPTIONS = [
 
 export default function Profile() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [profile, setProfile] = useState<ProfileData>({
-    username: "test",
-    email: "test@example.com",
+    username: user?.name ?? "",
+    email: user?.email ?? "",
     pronouns: "Prefer not to say",
     address: "",
     birthday: "",
