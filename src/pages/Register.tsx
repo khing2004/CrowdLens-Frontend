@@ -76,13 +76,13 @@ export default function Register() {
         <h1 className="title">Create Account</h1>
 
         <label>Full Name</label>
-        <input name="fullName" type="text" placeholder="Ex. Wince Dela Cruz" onChange={handleChange} />
+        <input name="fullName" type="text" placeholder="Ex. Juan Dela Cruz" onChange={handleChange} />
 
         <label>Email</label>
         <input name="email" type="email" placeholder="hello@crowdlens.com" onChange={handleChange} />
 
         <label>Address</label>
-        <input name="address" type="text" placeholder="Davao City" onChange={handleChange} />
+        <input name="address" type="text" placeholder="Cebu City" onChange={handleChange} />
 
         <label>Birth Date</label>
         <input name="birthDate" type="date" onChange={handleChange} />

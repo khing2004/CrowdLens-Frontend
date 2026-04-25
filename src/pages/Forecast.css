@@ -1,3 +1,7 @@
+/* =========================================================
+   Forecast page — CrowdLens
+   ========================================================= */
+
 .forecast-page {
   background: whitesmoke;
   min-height: 100vh;
@@ -13,45 +17,314 @@
   margin-bottom: 20px;
   color: #30924C;
   font-weight: bold;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
 }
 
+/* ---- Card shell ---- */
 .forecast-card {
   width: 100%;
-  max-width: 400px;
+  max-width: 520px;
   background: white;
   padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
-select {
-  width: 100%;
-  padding: 12px;
-  margin-top: 8px;
-  margin-bottom: 20px;
+.fc-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1b1b1b;
+  margin: 0 0 4px;
+}
+
+.fc-subtitle {
+  font-size: 13px;
+  color: #757575;
+  margin: 0 0 24px;
+}
+
+/* ---- Controls ---- */
+.fc-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.fc-field {
+  flex: 1;
+  min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fc-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.fc-select {
+  padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid #ddd;
   background: #f9f9f9;
+  font-size: 14px;
+  color: #1b1b1b;
+  width: 100%;
 }
 
-.forecast-btn {
+/* ---- Main button ---- */
+.fc-btn {
   width: 100%;
   padding: 12px;
   border-radius: 25px;
   border: none;
   background: #30924C;
   color: white;
-  font-weight: bold;
+  font-weight: 700;
+  font-size: 15px;
   cursor: pointer;
+  transition: background 0.2s;
 }
 
-.result-box {
-  margin-top: 30px;
+.fc-btn:disabled {
+  background: #a5d6b0;
+  cursor: not-allowed;
+}
+
+.fc-btn:not(:disabled):hover {
+  background: #25753d;
+}
+
+.fc-error {
+  color: #c62828;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+/* ---- Location label above results ---- */
+.fc-location-label {
+  font-size: 13px;
+  color: #555;
+  margin: 20px 0 12px;
+}
+
+/* ---- Forecast slot grid ---- */
+.fc-slots {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.fc-slot {
+  flex: 1;
+  min-width: 68px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 6px;
+  border-radius: 12px;
+  border: 1.5px solid transparent;
+}
+
+.fc-slot-hour {
+  font-size: 11px;
+  font-weight: 600;
+  color: #555;
+  text-transform: uppercase;
+}
+
+.fc-slot-score {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.fc-slot-level {
+  font-size: 10px;
+  font-weight: 700;
   text-align: center;
-  padding: 20px;
-  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
-.result-box.high { background: #ffebee; color: #c62828; }
-.result-box.medium { background: #fff3e0; color: #ef6c00; }
-.result-box.low { background: #e8f5e9; color: #2e7d32; }
+.fc-slot-conf {
+  font-size: 10px;
+  color: #757575;
+}
+
+/* Skeleton loading slots */
+.fc-slot-skeleton {
+  height: 96px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+  border: none;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Skeleton select placeholder */
+.fc-skeleton {
+  border-radius: 10px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+
+.fc-skeleton-select {
+  height: 40px;
+}
+
+/* ---- High congestion alert ---- */
+.fc-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff3e0;
+  border: 1.5px solid #e65100;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #e65100;
+  margin-bottom: 12px;
+}
+
+.fc-alert-icon {
+  font-size: 15px;
+}
+
+/* ---- Alternative suggestion ---- */
+.fc-alternative {
+  margin-bottom: 14px;
+}
+
+.fc-alt-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 6px;
+}
+
+.fc-alt-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid;
+}
+
+.fc-alt-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1b1b1b;
+}
+
+.fc-alt-level {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ---- Forecast unavailable fallback ---- */
+.fc-unavailable {
+  text-align: center;
+  padding: 28px 16px;
+  background: #f5f5f5;
+  border-radius: 12px;
+  margin-top: 20px;
+  color: #555;
+}
+
+.fc-unavailable-icon {
+  font-size: 28px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.fc-unavailable-sub {
+  font-size: 12px;
+  color: #999;
+  margin: 4px 0 0;
+}
+
+/* ---- Disclaimers ---- */
+.fc-disclaimer {
+  font-size: 11px;
+  color: #999;
+  margin: 4px 0 0;
+  line-height: 1.5;
+}
+
+.fc-disclaimer-warn {
+  color: #e65100;
+  font-weight: 500;
+}
+
+/* ---- Model type row + badge ---- */
+.fc-model-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 20px 0 12px;
+}
+
+.fc-location-label {
+  font-size: 13px;
+  color: #555;
+  margin: 0;
+}
+
+.fc-model-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.fc-badge-lstm {
+  background: #e8eaf6;
+  color: #3949ab;
+  border: 1px solid #9fa8da;
+}
+
+.fc-badge-stat {
+  background: #e0f2f1;
+  color: #00695c;
+  border: 1px solid #80cbc4;
+}
+
+/* ---- Trend chart ---- */
+.fc-chart-wrapper {
+  margin: 16px 0 12px;
+}
+
+.fc-chart-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 8px;
+}

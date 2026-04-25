@@ -5,9 +5,74 @@ import "./UserHome.css";
 import "../components/Home/CustomPopup.css";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { densityClasses, getIconByDensity } from "../utils/crowdHelper";
+import { densityClasses, getIconByDensity, getWaitTime, densityRank, getDistance } from "../utils/crowdHelper";
 import ReportModal from "../components/Home/ReportModal";
-import { Bookmark } from "lucide-react";
+import { Bookmark } from 'lucide-react';
+import type { CrowdLocation } from "../types/crowd";
+import { submitCrowdReport, getLocations, getForecast } from "../api/crowdService";
+import ConfirmReportModal from "../components/Home/ConfirmReportModal";
+
+
+// ── Forecast mini-chart types ─────────────────────────────────────────────────
+interface ForecastSlot { densityScore: number; isoTime: string; }
+
+// SVG sparkline — renders the next 6 predicted scores as a polyline + dots.
+// No external library needed; safe inside a Leaflet popup.
+function Sparkline({ slots, modelType }: { slots: ForecastSlot[]; modelType: string }) {
+  const W = 168, H = 40, PAD = 6;
+  const n = slots.length;
+  if (n < 2) return null;
+
+  const scoreColors: Record<number, string> = {
+    1: "#4caf50", 2: "#8bc34a", 3: "#ff9800", 4: "#f44336", 5: "#b71c1c"
+  };
+
+  const pts = slots.map((s, i) => {
+    const x = PAD + (i / (n - 1)) * (W - PAD * 2);
+    const y = PAD + ((5 - s.densityScore) / 4) * (H - PAD * 2);
+    return { x, y, score: s.densityScore };
+  });
+
+  const polyline = pts.map(p => `${p.x},${p.y}`).join(" ");
+  const peakScore = Math.max(...slots.map(s => s.densityScore));
+  const lineColor = scoreColors[peakScore] ?? "#30924C";
+  const isLSTM = modelType === "lstm";
+
+  return (
+    <div style={{ marginTop: 10 }}>
+      <p style={{ fontSize: 10, color: "#888", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.4px", fontWeight: 600 }}>
+        Predicted Trend
+        <span style={{
+          marginLeft: 6, padding: "1px 6px", borderRadius: 10, fontSize: 9, fontWeight: 700,
+          background: isLSTM ? "#e8eaf6" : "#e0f2f1",
+          color: isLSTM ? "#3949ab" : "#00695c"
+        }}>
+          {isLSTM ? "⚡ LSTM" : "📊 Statistical"}
+        </span>
+      </p>
+      <svg width={W} height={H} style={{ display: "block", overflow: "visible" }}>
+        <polyline points={polyline} fill="none" stroke={lineColor} strokeWidth={1.8}
+                  strokeLinecap="round" strokeLinejoin="round" />
+        {pts.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r={3.5}
+                  fill={scoreColors[p.score] ?? "#999"} stroke="white" strokeWidth={1} />
+        ))}
+      </svg>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
+        {slots.map((s, i) => {
+          const d = new Date(s.isoTime);
+          const h = d.getHours();
+          return (
+            <span key={i} style={{ fontSize: 9, color: "#aaa", width: `${100 / n}%`, textAlign: "center" }}>
+              {h % 12 === 0 ? 12 : h % 12}{h >= 12 ? "p" : "a"}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 // helper component to handle panning
 function RecenterAutomatically({ location }: { location: any }) {
@@ -27,7 +92,53 @@ export default function UserHomePage() {
   const userType: "admin" | "user" = "user";
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
+  const [locations, setLocations] = useState<CrowdLocation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [pendingLevel, setPendingLevel] = useState<string | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
+
+  // Popup forecast mini-chart state
+  const [popupForecast, setPopupForecast]           = useState<{ slots: ForecastSlot[]; modelType: string } | null>(null);
+  const [popupForecastLoading, setPopupForecastLoading] = useState(false);
+
+  // Fetch a 6-hour forecast whenever the user clicks a marker
+  useEffect(() => {
+    if (!selectedLocation) return;
+    setPopupForecast(null);
+    setPopupForecastLoading(true);
+    getForecast(selectedLocation.id, 6)
+      .then((data: any) => {
+        if (!data.forecastUnavailable && data.forecast?.length) {
+          setPopupForecast({ slots: data.forecast, modelType: data.modelType ?? "statistical" });
+        }
+      })
+      .catch(() => {/* silently skip — popup still works without the chart */})
+      .finally(() => setPopupForecastLoading(false));
+  }, [selectedLocation?.id]);
+
+  useEffect(() => {
+    const fetchMapData = async () => {
+      try {
+        const data = await getLocations();
+        // Map the backend 'pos' (List<double>) to React's [number, number]
+        setLocations(data);
+      } catch (error) {
+        console.error("Failed to load map data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMapData();
+  }, []);
+
+  if (loading) {return <div className="loading-screen">Loading CrowdLens Map...</div>;}
+
+  const handleInitialSelect = (level: string) => {
+    setPendingLevel(level);
+    setIsConfirmOpen(true);
+  };
 
   const toggleFavorite = (id: number) => {
     setFavoriteIds((prev) =>
@@ -35,35 +146,43 @@ export default function UserHomePage() {
     );
   };
 
-  const handleReportSubmit = (level: string) => {
-    console.log(`Reporting ${level} for ${selectedLocation.name}`);
-    // In your special problem, this will be an API call to your backend
-    alert("Thank you for your report!");
-    setIsReportModalOpen(false);
+  const handleFinalConfirm = async () => {
+    if (!selectedLocation || !pendingLevel) return;
+    
+    // Ask the browser for the user's current GPS coordinates
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        
+    console.log(`Report level ${pendingLevel} for location ID ${selectedLocation.id} at coordinates ${lat}, ${lng}`);
+
+    try {
+      await submitCrowdReport(selectedLocation.id, pendingLevel, lat, lng);
+      alert(`Thank you! You reported ${pendingLevel} for ${selectedLocation.name}`);
+      console.log("Report submitted successfully. You are at coordinates:", lat, lng);
+      // Close everything
+      setIsConfirmOpen(false);
+      setIsReportModalOpen(false);
+      
+      // Refresh map data
+      const updatedData = await getLocations();
+      setLocations(updatedData);
+    } catch (error: any) {
+      // Handle the 15-minute cooldown error from backend
+      if (error.response?.status === 400) {
+        alert(error.response.data);
+      }
+      setIsConfirmOpen(false);
+    }
+  },
+  (error) => {
+    alert("Unable to access your location. Please allow GPS access to submit a report.");
+    setIsConfirmOpen(false);
+  });
   };
-
-  // Center of Cebu
+  // Center of Cebu 
   const center: [number, number] = [10.3223, 123.8982];
-
-  //Mock data for Areas (replace with api call later)
-  const locations = [
-    {
-      id: 1,
-      name: "Cebu City Public Library",
-      type: "Public Library",
-      pos: [10.3095, 123.8931],
-      density: "Medium",
-      lastUpdated: "5 mins ago",
-    },
-    {
-      id: 2,
-      name: "Vicente Sotto Medical Center",
-      type: "Hospital",
-      pos: [10.3117, 123.8915],
-      density: "High",
-      lastUpdated: "2 mins ago",
-    },
-  ];
 
   return (
     <div className="user-home-page">
@@ -163,23 +282,42 @@ export default function UserHomePage() {
                         >
                           ● {location.density} Crowd Level
                         </span>
-                        <span className="updated-text">
-                          Updated {location.lastUpdated}
-                        </span>
+                        <span className="updated-text">{location.lastUpdated}</span>
                       </div>
                     </div>
-                    <p className="quieter-nearby">
-                      <strong>Tip:</strong> Lahug Area is currently quieter.
-                    </p>
+                    {(() => {
+                      const quieter = locations
+                        .filter(l =>
+                          l.id !== location.id &&
+                          l.type === location.type &&
+                          densityRank[l.density] < densityRank[location.density]
+                        )
+                        .sort((a, b) =>
+                          getDistance(location.pos, a.pos) - getDistance(location.pos, b.pos)
+                        )[0];
+                      return quieter
+                        ? (
+                          <p className="quieter-nearby">
+                            <strong>Tip:</strong> {quieter.name} is currently quieter.
+                          </p>
+                        )
+                        : null;
+                    })()}
                   </div>
 
                   <div className="congestion-info">
                     <h3>Live Insights</h3>
-                    <p>
-                      Based on connection data, wait times are approximately
-                      10-20 minutes.
-                    </p>
+                    <p>Based on connection data, wait times are approximately {getWaitTime(location.density)}.</p>
                   </div>
+
+                  {/* Predicted trend sparkline — shown only for the active marker */}
+                  {selectedLocation?.id === location.id && (
+                    popupForecastLoading
+                      ? <p style={{ fontSize: 11, color: "#aaa", margin: "8px 0 0" }}>Loading trend…</p>
+                      : popupForecast && (
+                          <Sparkline slots={popupForecast.slots} modelType={popupForecast.modelType} />
+                        )
+                  )}
 
                   <button
                     className="input-btn"
@@ -224,7 +362,14 @@ export default function UserHomePage() {
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
         locationName={selectedLocation?.name || ""}
-        onSubmit={handleReportSubmit}
+        onSubmit={handleInitialSelect} // trigger confirmation
+      />
+
+      <ConfirmReportModal 
+        isOpen={isConfirmOpen}
+        level={pendingLevel || ""}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleFinalConfirm} // Triggers the actual API call
       />
     </div>
   );
