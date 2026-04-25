@@ -20,8 +20,7 @@ export default function Settings() {
 
     const onClickOutside = (event: MouseEvent) => {
       if (!panelRef.current) return;
-      const targetNode = event.target as Node;
-      if (!panelRef.current.contains(targetNode)) {
+      if (!panelRef.current.contains(event.target as Node)) {
         setActivePanel(null);
         setPendingLocationEnabled(locationEnabled);
         setPendingNotificationsSetting(notificationsSetting);
@@ -33,13 +32,9 @@ export default function Settings() {
   }, [activePanel, locationEnabled, notificationsSetting]);
 
   const handleOptionClick = (item: string) => {
-    if (item === "Location Sharing") {
-      setPendingLocationEnabled(locationEnabled);
-      setActivePanel((open) => (open === item ? null : item));
-      return;
-    }
-    if (item === "Notifications") {
-      setPendingNotificationsSetting(notificationsSetting);
+    if (item === "Location Sharing" || item === "Notifications") {
+      if (item === "Location Sharing") setPendingLocationEnabled(locationEnabled);
+      if (item === "Notifications") setPendingNotificationsSetting(notificationsSetting);
       setActivePanel((open) => (open === item ? null : item));
       return;
     }
@@ -47,6 +42,15 @@ export default function Settings() {
     setActivePanel(null);
 
     switch (item) {
+      case "Profile":
+        navigate("/profile");
+        break;
+      case "Privacy Policy":
+        navigate("/privacy-policy");
+        break;
+      case "Terms of Service":
+        navigate("/terms-of-service");
+        break;
       case "Logout":
         logout();
         navigate("/");
@@ -57,15 +61,15 @@ export default function Settings() {
   };
 
   const optionItems = [
-    { label: "Profile", icon: "👤" },
+    { label: "Profile",          icon: "👤" },
     { label: "Location Sharing", icon: "📍" },
-    { label: "Notifications", icon: "🔔" },
-    { label: "Privacy Policy", icon: "🔒" },
+    { label: "Notifications",    icon: "🔔" },
+    { label: "Privacy Policy",   icon: "🔒" },
     { label: "Terms of Service", icon: "📄" },
   ];
 
-  const isAdmin = user?.role === "admin" || user?.role === "Admin";
-  const displayName = user?.name ?? "—";
+  const isAdmin      = user?.role === "admin" || user?.role === "Admin";
+  const displayName  = user?.name  ?? "—";
   const displayEmail = user?.email ?? "—";
 
   return (
@@ -73,7 +77,7 @@ export default function Settings() {
       {/* Header */}
       <div className="settings-header">
         <h1 className="settings-header-title">Account</h1>
-        <p className="settings-header-sub">Manage your profile & preferences</p>
+        <p className="settings-header-sub">Manage your profile &amp; preferences</p>
       </div>
 
       {/* Profile Card */}
@@ -83,8 +87,8 @@ export default function Settings() {
           <span className="profile-avatar-badge" />
         </div>
         <div className="profile-info">
-          <p className="profile-name">test</p>
-          <p className="profile-email">test@example.com</p>
+          <p className="profile-name">{displayName}</p>
+          <p className="profile-email">{displayEmail}</p>
           <p className="profile-bio">
             This is a sample bio for the user. It can be edited in the profile settings.
           </p>
@@ -95,7 +99,7 @@ export default function Settings() {
       </div>
 
       {/* Admin Button */}
-      {userType === "admin" && (
+      {isAdmin && (
         <>
           <p className="settings-section-label">Admin</p>
           <div className="admin-section">
@@ -123,17 +127,12 @@ export default function Settings() {
               </button>
 
               {isActivePanel && label === "Location Sharing" && (
-                <div
-                  ref={panelRef}
-                  className="settings-panel"
-                  role="dialog"
-                  aria-label="Location Sharing settings"
-                >
+                <div ref={panelRef} className="settings-panel" role="dialog" aria-label="Location Sharing settings">
                   <div className="panel-row">
                     <label htmlFor="location-toggle">Location Sharing</label>
                     <button
                       id="location-toggle"
-                      className={`toggle-button ${pendingLocationEnabled ? "enabled" : "disabled"}`}
+                      className={`toggle-button ${pendingLocationEnabled ? "enabled" : ""}`}
                       onClick={() => setPendingLocationEnabled((prev) => !prev)}
                     >
                       {pendingLocationEnabled ? "On" : "Off"}
@@ -151,12 +150,7 @@ export default function Settings() {
               )}
 
               {isActivePanel && label === "Notifications" && (
-                <div
-                  ref={panelRef}
-                  className="settings-panel"
-                  role="dialog"
-                  aria-label="Notification preferences"
-                >
+                <div ref={panelRef} className="settings-panel" role="dialog" aria-label="Notification preferences">
                   <fieldset>
                     <legend>Notification preferences</legend>
                     {(["All", "Mentions", "None"] as const).map((opt) => (
@@ -168,11 +162,7 @@ export default function Settings() {
                           checked={pendingNotificationsSetting === opt}
                           onChange={() => setPendingNotificationsSetting(opt)}
                         />
-                        {opt === "All"
-                          ? "All notifications"
-                          : opt === "Mentions"
-                          ? "Mentions only"
-                          : "None"}
+                        {opt === "All" ? "All notifications" : opt === "Mentions" ? "Mentions only" : "None"}
                       </label>
                     ))}
                   </fieldset>
@@ -195,10 +185,7 @@ export default function Settings() {
       <p className="settings-section-label">Account</p>
       <ul className="settings-options">
         <li className="settings-option logout-option">
-          <button
-            className="settings-action"
-            onClick={() => handleOptionClick("Logout")}
-          >
+          <button className="settings-action" onClick={() => handleOptionClick("Logout")}>
             <span className="settings-action-icon">🚪</span>
             <span className="settings-action-label">Logout</span>
             <span className="settings-action-chevron">›</span>
@@ -206,27 +193,7 @@ export default function Settings() {
         </li>
       </ul>
 
-      {/* Bottom Nav */}
-      <div className="bottom-nav">
-        <div className="nav-section">
-          <Link to="/home" className="nav-item">
-            <img src="/Home.png" alt="Home" className="nav-icon" />
-            <p className="nav-text">Home</p>
-          </Link>
-        </div>
-        <div className="nav-section">
-          <Link to="/favorites" className="nav-item">
-            <img src="/Favorites.png" alt="Favorites" className="nav-icon" />
-            <p className="nav-text">Favorites</p>
-          </Link>
-        </div>
-        <div className="nav-section">
-          <Link to="/settings" className="nav-item">
-            <img src="/Settings Selected.png" alt="Account" className="nav-icon" />
-            <p className="nav-text">Account</p>
-          </Link>
-        </div>
-      </div>
+      <BottomNav />
     </div>
   );
 }

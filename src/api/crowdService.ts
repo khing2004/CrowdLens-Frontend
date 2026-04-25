@@ -1,5 +1,6 @@
 import { apiClient } from "./authService";
 import type { CrowdLocation } from "../types/crowd";
+import type { AlertedLocation } from "../components/AlertModal";
 
 export const submitCrowdReport = async (
   locationId: number,
@@ -47,10 +48,22 @@ export const getFavorites = async (): Promise<CrowdLocation[]> => {
   return response.data;
 };
 
-export const addFavorite = async (locationId: number): Promise<void> => {
-  await apiClient.post(`/api/Favorites/${locationId}`);
+// threshold: "None" | "Very Low" | "Low" | "Medium"
+export const addFavorite = async (locationId: number, threshold: string = "Low"): Promise<void> => {
+  await apiClient.post(`/api/Favorites/${locationId}`, { alertThreshold: threshold });
+};
+
+export const updateFavoriteThreshold = async (locationId: number, threshold: string): Promise<void> => {
+  await apiClient.put(`/api/Favorites/${locationId}/threshold`, { alertThreshold: threshold });
 };
 
 export const removeFavorite = async (locationId: number): Promise<void> => {
   await apiClient.delete(`/api/Favorites/${locationId}`);
+};
+
+// ── Alerts ────────────────────────────────────────────────────────────────────
+
+export const checkAlerts = async (): Promise<AlertedLocation[]> => {
+  const response = await apiClient.get("/api/Alerts/check");
+  return response.data;
 };

@@ -7,6 +7,8 @@ import { useState, useEffect } from "react";
 import { densityClasses, getIconByDensity } from "../utils/crowdHelper";
 import ReportModal from "../components/Home/ReportModal";
 import BottomNav from "../components/BottomNav";
+import ThresholdPicker, { type Threshold } from "../components/ThresholdPicker";
+import AlertModal from "../components/AlertModal";
 import { toastSuccess, toastError, toastWarning } from "../components/Toast";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -310,7 +312,7 @@ function DashboardSection({ locations }: DashboardSectionProps) {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function UserHomePage() {
-  const { user } = useAuth();
+  const { user, pendingAlerts, clearAlerts } = useAuth();
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<CrowdLocation | null>(null);
   const [locations, setLocations] = useState<CrowdLocation[]>([]);
@@ -319,6 +321,10 @@ export default function UserHomePage() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   const [activeTab, setActiveTab] = useState<"home" | "dashboard">("home");
+
+  // Threshold picker state: which location's popup is showing the picker
+  const [pendingFavoriteId, setPendingFavoriteId] = useState<number | null>(null);
+  const [pendingThreshold, setPendingThreshold] = useState<Threshold>("Low");
 
   const [popupForecast, setPopupForecast] = useState<{ slots: ForecastSlot[]; modelType: string } | null>(null);
   const [popupForecastLoading, setPopupForecastLoading] = useState(false);
@@ -360,30 +366,37 @@ export default function UserHomePage() {
     setIsConfirmOpen(true);
   };
 
-  // Optimistic toggle — updates UI instantly, reverts if the API call fails
-  const toggleFavorite = async (id: number) => {
-    const wasFav = favoriteIds.has(id);
-    setFavoriteIds(prev => {
-      const next = new Set(prev);
-      wasFav ? next.delete(id) : next.add(id);
-      return next;
-    });
+  // Clicking the bookmark on an already-favorited location removes it immediately.
+  // Clicking on a new location opens the ThresholdPicker inside the popup.
+  const handleBookmarkClick = (id: number) => {
+    if (favoriteIds.has(id)) {
+      removeFavoriteOptimistic(id);
+    } else {
+      setPendingFavoriteId(id);
+      setPendingThreshold("Low");
+    }
+  };
+
+  const removeFavoriteOptimistic = async (id: number) => {
+    setFavoriteIds(prev => { const s = new Set(prev); s.delete(id); return s; });
     try {
-      if (wasFav) {
-        await removeFavorite(id);
-        toastSuccess("Removed from favorites.");
-      } else {
-        await addFavorite(id);
-        toastSuccess("Saved to favorites!");
-      }
+      await removeFavorite(id);
+      toastSuccess("Removed from favorites.");
     } catch {
-      // Revert optimistic change on failure
-      setFavoriteIds(prev => {
-        const next = new Set(prev);
-        wasFav ? next.add(id) : next.delete(id);
-        return next;
-      });
-      toastError("Failed to update favorites.");
+      setFavoriteIds(prev => new Set(prev).add(id));
+      toastError("Failed to remove favorite.");
+    }
+  };
+
+  const confirmAddFavorite = async (id: number, threshold: Threshold) => {
+    setPendingFavoriteId(null);
+    setFavoriteIds(prev => new Set(prev).add(id));
+    try {
+      await addFavorite(id, threshold);
+      toastSuccess(`Saved! Alerts fire when crowd is "${threshold}" or below.`);
+    } catch {
+      setFavoriteIds(prev => { const s = new Set(prev); s.delete(id); return s; });
+      toastError("Failed to save favorite.");
     }
   };
 
@@ -481,7 +494,7 @@ export default function UserHomePage() {
                           <button
                             className="save-link-btn"
                             aria-label={favoriteIds.has(location.id) ? "Remove from favorites" : "Save to favorites"}
-                            onClick={(e) => { e.stopPropagation(); toggleFavorite(location.id); }}
+                            onClick={(e) => { e.stopPropagation(); handleBookmarkClick(location.id); }}
                           >
                             <img
                               src={favoriteIds.has(location.id) ? "/Favorites Selected.png" : "/Favorites.png"}
@@ -509,12 +522,47 @@ export default function UserHomePage() {
                       {popupForecast && selectedLocation?.id === location.id && (
                         <Sparkline slots={popupForecast.slots} modelType={popupForecast.modelType} />
                       )}
-                      <button
-                        className="input-btn"
-                        onClick={(e) => { e.stopPropagation(); setIsReportModalOpen(true); }}
-                      >
-                        <span>+</span> Input Crowd Level
-                      </button>
+
+                      {/* Threshold picker — shown only when user is adding this location */}
+                      {pendingFavoriteId === location.id && (
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <ThresholdPicker
+                            value={pendingThreshold}
+                            onChange={setPendingThreshold}
+                          />
+                          <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                            <button
+                              className="input-btn"
+                              style={{ flex: 1 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                confirmAddFavorite(location.id, pendingThreshold);
+                              }}
+                            >
+                              Save to Favorites
+                            </button>
+                            <button
+                              className="input-btn"
+                              style={{ flex: 0, background: "#b2bec3", minWidth: 64 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPendingFavoriteId(null);
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {pendingFavoriteId !== location.id && (
+                        <button
+                          className="input-btn"
+                          onClick={(e) => { e.stopPropagation(); setIsReportModalOpen(true); }}
+                        >
+                          <span>+</span> Input Crowd Level
+                        </button>
+                      )}
                     </div>
                   </Popup>
                 </Marker>
@@ -540,6 +588,20 @@ export default function UserHomePage() {
         level={pendingLevel || ""}
         onClose={() => setIsConfirmOpen(false)}
         onConfirm={handleFinalConfirm}
+      />
+
+      {/* Post-login crowd alerts */}
+      <AlertModal
+        alerts={pendingAlerts}
+        onDismiss={clearAlerts}
+        onViewOnMap={(locationId) => {
+          const loc = locations.find(l => l.id === locationId);
+          if (loc) {
+            setSelectedLocation(loc);
+            setActiveTab("home");
+          }
+          clearAlerts();
+        }}
       />
     </div>
   );
