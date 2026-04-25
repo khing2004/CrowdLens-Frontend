@@ -19,15 +19,10 @@ export default function Settings() {
   const panelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (!activePanel) {
-      return;
-    }
+    if (!activePanel) return;
 
     const onClickOutside = (event: MouseEvent) => {
-      if (!panelRef.current) {
-        return;
-      }
-
+      if (!panelRef.current) return;
       const targetNode = event.target as Node;
       if (!panelRef.current.contains(targetNode)) {
         setActivePanel(null);
@@ -46,7 +41,6 @@ export default function Settings() {
       setActivePanel((open) => (open === item ? null : item));
       return;
     }
-
     if (item === "Notifications") {
       setPendingNotificationsSetting(notificationsSetting);
       setActivePanel((open) => (open === item ? null : item));
@@ -66,7 +60,6 @@ export default function Settings() {
         window.open("/terms-of-service", "_blank");
         break;
       case "Logout":
-        // TODO: replace with real logout API call
         console.log("Logout clicked");
         navigate("/login");
         break;
@@ -76,12 +69,11 @@ export default function Settings() {
   };
 
   const optionItems = [
-    "Profile",
-    "Location Sharing",
-    "Notifications",
-    "Privacy Policy",
-    "Terms of Service",
-    "Logout",
+    { label: "Profile", icon: "👤" },
+    { label: "Location Sharing", icon: "📍" },
+    { label: "Notifications", icon: "🔔" },
+    { label: "Privacy Policy", icon: "🔒" },
+    { label: "Terms of Service", icon: "📄" },
   ];
 
   const handleLogout = () => {
@@ -91,49 +83,59 @@ export default function Settings() {
 
   return (
     <div className="settings-page">
-      <p className="page-label">Account Settings</p>
-
-      <div className="user-info">
-        <img src="/Logo.png" alt="Profile" className="profile-picture" />
-        <p className="username">test</p>
-        <p className="email">test@example.com</p>
+      {/* Header */}
+      <div className="settings-header">
+        <h1 className="settings-header-title">Account</h1>
+        <p className="settings-header-sub">Manage your profile & preferences</p>
       </div>
 
-      <div className="bio">
-        <h2>Bio</h2>
-        <p className="bio-text">
-          This is a sample bio for the user. It can be edited in the profile
-          settings.
-        </p>
-      </div>
-
-      <div>
-        <div className="settings-option">
-          {userType === "admin" && (
-            <button
-              className="settings-action"
-              onClick={() => navigate("/locations")}
-            >
-              Manage Locations
-            </button>
-          )}
+      {/* Profile Card */}
+      <div className="profile-card">
+        <div className="profile-avatar-wrapper">
+          <img src="/Logo.png" alt="Profile" className="profile-picture" />
+          <span className="profile-avatar-badge" />
         </div>
+        <div className="profile-info">
+          <p className="profile-name">test</p>
+          <p className="profile-email">test@example.com</p>
+          <p className="profile-bio">
+            This is a sample bio for the user. It can be edited in the profile settings.
+          </p>
+        </div>
+        <button className="profile-edit-btn" onClick={() => navigate("/profile")}>
+          Edit
+        </button>
       </div>
 
-      <ul className="settings-options">
-        {optionItems.map((item) => {
-          const isActivePanel = activePanel === item;
+      {/* Admin Button */}
+      {userType === "admin" && (
+        <>
+          <p className="settings-section-label">Admin</p>
+          <div className="admin-section">
+            <button className="admin-btn" onClick={() => navigate("/locations")}>
+              🗂 Manage Locations
+            </button>
+          </div>
+        </>
+      )}
 
+      {/* Settings Options */}
+      <p className="settings-section-label">Preferences</p>
+      <ul className="settings-options">
+        {optionItems.map(({ label, icon }) => {
+          const isActivePanel = activePanel === label;
           return (
-            <li key={item} className="settings-option">
+            <li key={label} className="settings-option">
               <button
                 className="settings-action"
-                onClick={() => handleOptionClick(item)}
+                onClick={() => handleOptionClick(label)}
               >
-                {item}
+                <span className="settings-action-icon">{icon}</span>
+                <span className="settings-action-label">{label}</span>
+                <span className="settings-action-chevron">›</span>
               </button>
 
-              {isActivePanel && item === "Location Sharing" && (
+              {isActivePanel && label === "Location Sharing" && (
                 <div
                   ref={panelRef}
                   className="settings-panel"
@@ -171,7 +173,7 @@ export default function Settings() {
                 </div>
               )}
 
-              {isActivePanel && item === "Notifications" && (
+              {isActivePanel && label === "Notifications" && (
                 <div
                   ref={panelRef}
                   className="settings-panel"
@@ -180,40 +182,23 @@ export default function Settings() {
                 >
                   <fieldset>
                     <legend>Notification preferences</legend>
-                    <label>
-                      <input
-                        type="radio"
-                        name="notification-mode"
-                        value="All"
-                        checked={pendingNotificationsSetting === "All"}
-                        onChange={() => setPendingNotificationsSetting("All")}
-                      />
-                      All notifications
-                    </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name="notification-mode"
-                        value="Mentions"
-                        checked={pendingNotificationsSetting === "Mentions"}
-                        onChange={() =>
-                          setPendingNotificationsSetting("Mentions")
-                        }
-                      />
-                      Mentions only
-                    </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name="notification-mode"
-                        value="None"
-                        checked={pendingNotificationsSetting === "None"}
-                        onChange={() => setPendingNotificationsSetting("None")}
-                      />
-                      None
-                    </label>
+                    {(["All", "Mentions", "None"] as const).map((opt) => (
+                      <label key={opt}>
+                        <input
+                          type="radio"
+                          name="notification-mode"
+                          value={opt}
+                          checked={pendingNotificationsSetting === opt}
+                          onChange={() => setPendingNotificationsSetting(opt)}
+                        />
+                        {opt === "All"
+                          ? "All notifications"
+                          : opt === "Mentions"
+                          ? "Mentions only"
+                          : "None"}
+                      </label>
+                    ))}
                   </fieldset>
-
                   <div className="panel-actions">
                     <button
                       onClick={() => {
@@ -239,6 +224,22 @@ export default function Settings() {
         })}
       </ul>
 
+      {/* Logout — separated */}
+      <p className="settings-section-label">Account</p>
+      <ul className="settings-options">
+        <li className="settings-option logout-option">
+          <button
+            className="settings-action"
+            onClick={() => handleOptionClick("Logout")}
+          >
+            <span className="settings-action-icon">🚪</span>
+            <span className="settings-action-label">Logout</span>
+            <span className="settings-action-chevron">›</span>
+          </button>
+        </li>
+      </ul>
+
+      {/* Bottom Nav */}
       <div className="bottom-nav">
         <div className="nav-section">
           <Link to="/home" className="nav-item">
@@ -246,7 +247,6 @@ export default function Settings() {
             <p className="nav-text">Home</p>
           </Link>
         </div>
-
         <div className="nav-section">
           <Link to="/favorites" className="nav-item">
             <img src="/Favorites.png" alt="Favorites" className="nav-icon" />
@@ -255,11 +255,7 @@ export default function Settings() {
         </div>
         <div className="nav-section">
           <Link to="/settings" className="nav-item">
-            <img
-              src="/Settings Selected.png"
-              alt="Account"
-              className="nav-icon"
-            />
+            <img src="/Settings Selected.png" alt="Account" className="nav-icon" />
             <p className="nav-text">Account</p>
           </Link>
         </div>
