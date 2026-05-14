@@ -1,14 +1,12 @@
 // src/pages/Register.tsx
 import "./Register.css";
 import React, { useState } from "react";
-import ReCAPTCHA from "react-google-recaptcha";
 import { useNavigate, Link } from "react-router-dom";
 import { authService } from "../api/authService";
 import { toastError, toastSuccess } from "../components/Toast";
 
 export default function Register() {
   const navigate = useNavigate();
-  const [captchaValue, setCaptchaValue] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -25,10 +23,6 @@ export default function Register() {
   };
 
   const handleSignUp = async () => {
-    if (!captchaValue) {
-      toastError("Please verify that you are not a robot.");
-      return;
-    }
     if (formData.password !== formData.confirmPassword) {
       toastError("Passwords do not match.");
       return;
@@ -81,13 +75,6 @@ export default function Register() {
 
         <label htmlFor="reg-confirmPassword">Confirm Password</label>
         <input id="reg-confirmPassword" name="confirmPassword" type="password" placeholder="••••••••" onChange={handleChange} required />
-
-        <div className="captcha-wrapper">
-          <ReCAPTCHA
-            sitekey="6Ld-eIYsAAAAAHv0Hx7lnj5-sb54WO7qKYzcCR_S"
-            onChange={(val) => setCaptchaValue(val)}
-          />
-        </div>
 
         <button className="signup-btn" onClick={handleSignUp} disabled={loading}>
           {loading ? "Creating account…" : "Sign Up"}
