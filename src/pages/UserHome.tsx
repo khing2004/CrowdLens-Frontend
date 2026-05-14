@@ -332,7 +332,7 @@ export default function UserHomePage() {
   const [pendingThreshold, setPendingThreshold] = useState<Threshold>("Low");
 
   const [popupForecast, setPopupForecast] = useState<{ slots: ForecastSlot[]; modelType: string } | null>(null);
-  const [popupForecastLoading, setPopupForecastLoading] = useState(false);
+  const [, setPopupForecastLoading] = useState(false);
 
   // Load locations and saved favorites in parallel on mount
   useEffect(() => {
