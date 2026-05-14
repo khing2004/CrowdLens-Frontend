@@ -84,6 +84,22 @@
 .stat-card span { font-size: 12px; color: #b2bec3; }
 .stat-card strong { font-size: 14px; margin-top: 5px; }
 
+.forecast-link-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 16px;
+  background: #30924C;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 /* Map Styling */
 .map-section {
   margin: 0 20px 100px;

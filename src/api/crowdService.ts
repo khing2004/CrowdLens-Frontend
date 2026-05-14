@@ -6,13 +6,15 @@ export const submitCrowdReport = async (
   locationId: number,
   level: string,
   latitude: number,
-  longitude: number
+  longitude: number,
+  remark?: string
 ) => {
   return await apiClient.post("/api/Crowd/report", {
     locationId,
     SelectedLevel: level,
     latitude,
     longitude,
+    remark: remark || null,
     timestamp: new Date().toISOString(),
   });
 };
@@ -59,6 +61,34 @@ export const updateFavoriteThreshold = async (locationId: number, threshold: str
 
 export const removeFavorite = async (locationId: number): Promise<void> => {
   await apiClient.delete(`/api/Favorites/${locationId}`);
+};
+
+// ── Report details + voting ───────────────────────────────────────────────────
+
+export interface ReportDetail {
+  id: number;
+  userName: string;
+  densityLevel: string;
+  remark: string | null;
+  upvotes: number;
+  downvotes: number;
+  userVote: "Up" | "Down" | null;
+  reportedAt: string;
+}
+
+export const getLocationReports = async (locationId: number): Promise<ReportDetail[]> => {
+  const response = await apiClient.get(`/api/Crowd/location/${locationId}/reports`);
+  return response.data;
+};
+
+export const voteOnReport = async (
+  reportId: number,
+  voteType: "Up" | "Down",
+  latitude: number,
+  longitude: number
+): Promise<{ upvotes: number; downvotes: number; userVote: "Up" | "Down" | null }> => {
+  const response = await apiClient.post(`/api/Crowd/report/${reportId}/vote`, { voteType, latitude, longitude });
+  return response.data;
 };
 
 // ── Alerts ────────────────────────────────────────────────────────────────────

@@ -6,10 +6,12 @@ import "../components/Home/CustomPopup.css";
 import { useState, useEffect } from "react";
 import { densityClasses, getIconByDensity } from "../utils/crowdHelper";
 import ReportModal from "../components/Home/ReportModal";
+import ReportsList from "../components/Home/ReportsList";
 import BottomNav from "../components/BottomNav";
 import ThresholdPicker, { type Threshold } from "../components/ThresholdPicker";
 import AlertModal from "../components/AlertModal";
 import { toastSuccess, toastError, toastWarning } from "../components/Toast";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   TrendingUp,
@@ -23,6 +25,7 @@ import {
   ArrowDownRight,
 } from "lucide-react";
 import type { CrowdLocation, density } from "../types/crowd";
+import { getLiveInsight } from "../types/crowd";
 import {
   submitCrowdReport,
   getLocations,
@@ -312,6 +315,7 @@ function DashboardSection({ locations }: DashboardSectionProps) {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function UserHomePage() {
+  const navigate = useNavigate();
   const { user, pendingAlerts, clearAlerts } = useAuth();
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<CrowdLocation | null>(null);
@@ -321,13 +325,14 @@ export default function UserHomePage() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   const [activeTab, setActiveTab] = useState<"home" | "dashboard">("home");
+  const [reportsOpenFor, setReportsOpenFor] = useState<number | null>(null);
 
   // Threshold picker state: which location's popup is showing the picker
   const [pendingFavoriteId, setPendingFavoriteId] = useState<number | null>(null);
   const [pendingThreshold, setPendingThreshold] = useState<Threshold>("Low");
 
   const [popupForecast, setPopupForecast] = useState<{ slots: ForecastSlot[]; modelType: string } | null>(null);
-  const [popupForecastLoading, setPopupForecastLoading] = useState(false);
+  const [, setPopupForecastLoading] = useState(false);
 
   // Load locations and saved favorites in parallel on mount
   useEffect(() => {
@@ -400,14 +405,14 @@ export default function UserHomePage() {
     }
   };
 
-  const handleFinalConfirm = async () => {
+  const handleFinalConfirm = async (remark: string) => {
     if (!selectedLocation || !pendingLevel) return;
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude: lat, longitude: lng } = position.coords;
         try {
-          await submitCrowdReport(selectedLocation.id, pendingLevel, lat, lng);
+          await submitCrowdReport(selectedLocation.id, pendingLevel, lat, lng, remark || undefined);
           toastSuccess(`Reported ${pendingLevel} for ${selectedLocation.name}`);
           setIsConfirmOpen(false);
           setIsReportModalOpen(false);
@@ -470,6 +475,10 @@ export default function UserHomePage() {
             </div>
           </div>
 
+          <button className="forecast-link-btn" onClick={() => navigate("/forecast")}>
+            View Forecast
+          </button>
+
           <main className="map-section">
             <MapContainer center={center} zoom={14} className="main-map">
               <TileLayer
@@ -517,7 +526,7 @@ export default function UserHomePage() {
                       </div>
                       <div className="congestion-info">
                         <h3>Live Insights</h3>
-                        <p>Based on connection data, wait times are approximately 10–20 minutes.</p>
+                        <p>{getLiveInsight(location.type, location.density)}</p>
                       </div>
                       {popupForecast && selectedLocation?.id === location.id && (
                         <Sparkline slots={popupForecast.slots} modelType={popupForecast.modelType} />
@@ -556,12 +565,30 @@ export default function UserHomePage() {
                       )}
 
                       {pendingFavoriteId !== location.id && (
-                        <button
-                          className="input-btn"
-                          onClick={(e) => { e.stopPropagation(); setIsReportModalOpen(true); }}
-                        >
-                          <span>+</span> Input Crowd Level
-                        </button>
+                        <>
+                          <button
+                            className="input-btn"
+                            onClick={(e) => { e.stopPropagation(); setIsReportModalOpen(true); }}
+                          >
+                            <span>+</span> Input Crowd Level
+                          </button>
+
+                          <button
+                            className="reports-toggle-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setReportsOpenFor(prev => prev === location.id ? null : location.id);
+                            }}
+                          >
+                            {reportsOpenFor === location.id ? "▲ Hide reports" : "▼ View reports"}
+                          </button>
+
+                          {reportsOpenFor === location.id && (
+                            <div onClick={(e) => e.stopPropagation()}>
+                              <ReportsList locationId={location.id} />
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   </Popup>
