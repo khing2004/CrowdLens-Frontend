@@ -1,13 +1,33 @@
-// src/pages/Register.tsx
 import "./Register.css";
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { authService } from "../api/authService";
 import { toastError, toastSuccess } from "../components/Toast";
 
+function EyeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function EyeOffIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+      <line x1="1" y1="1" x2="23" y2="23" />
+    </svg>
+  );
+}
+
 export default function Register() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -22,7 +42,8 @@ export default function Register() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSignUp = async () => {
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       toastError("Passwords do not match.");
       return;
@@ -48,41 +69,75 @@ export default function Register() {
 
   return (
     <div className="register-page">
-      <img src="/Image2.png" className="side-image" alt="" aria-hidden="true" />
+      <div className="register-blob register-blob--tl" aria-hidden="true" />
+      <div className="register-blob register-blob--br" aria-hidden="true" />
 
       <div className="register-card">
         <div className="logo-area">
-          <img src="/Logo.png" alt="CrowdLens logo" className="logo" />
-          <img src="/Crowdlens.png" alt="CrowdLens" className="logo-text" />
+          <img src="/Logo.png" alt="CrowdLens logo" className="reg-logo" />
+          <img src="/Crowdlens.png" alt="CrowdLens" className="reg-logo-text" />
         </div>
 
-        <h1 className="title">Create Account</h1>
+        <h1 className="reg-title">Create Account</h1>
+        <p className="reg-subtitle">Join CrowdLens and monitor crowd levels near you</p>
 
-        <label htmlFor="reg-fullName">Full Name</label>
-        <input id="reg-fullName" name="fullName" type="text" placeholder="Ex. Juan Dela Cruz" onChange={handleChange} required />
+        <form onSubmit={handleSignUp} className="register-form" noValidate>
+          <div className="reg-row">
+            <div className="reg-field">
+              <label htmlFor="reg-fullName">Full Name</label>
+              <input id="reg-fullName" name="fullName" type="text" placeholder="Juan Dela Cruz" onChange={handleChange} required />
+            </div>
+            <div className="reg-field">
+              <label htmlFor="reg-email">Email</label>
+              <input id="reg-email" name="email" type="email" placeholder="you@example.com" onChange={handleChange} required />
+            </div>
+          </div>
 
-        <label htmlFor="reg-email">Email</label>
-        <input id="reg-email" name="email" type="email" placeholder="hello@crowdlens.com" onChange={handleChange} required />
+          <div className="reg-row">
+            <div className="reg-field">
+              <label htmlFor="reg-address">Address</label>
+              <input id="reg-address" name="address" type="text" placeholder="Cebu City" onChange={handleChange} required />
+            </div>
+            <div className="reg-field">
+              <label htmlFor="reg-birthDate">Birth Date</label>
+              <input id="reg-birthDate" name="birthDate" type="date" onChange={handleChange} required />
+            </div>
+          </div>
 
-        <label htmlFor="reg-address">Address</label>
-        <input id="reg-address" name="address" type="text" placeholder="Cebu City" onChange={handleChange} required />
+          <div className="reg-row">
+            <div className="reg-field">
+              <label htmlFor="reg-password">Password</label>
+              <div className="reg-input-wrapper">
+                <input id="reg-password" name="password" type={showPassword ? "text" : "password"} placeholder="••••••••" onChange={handleChange} required />
+                <button type="button" className="reg-toggle-password" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? "Hide password" : "Show password"}>
+                  {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                </button>
+              </div>
+            </div>
+            <div className="reg-field">
+              <label htmlFor="reg-confirmPassword">Confirm Password</label>
+              <div className="reg-input-wrapper">
+                <input id="reg-confirmPassword" name="confirmPassword" type={showConfirm ? "text" : "password"} placeholder="••••••••" onChange={handleChange} required />
+                <button type="button" className="reg-toggle-password" onClick={() => setShowConfirm(v => !v)} aria-label={showConfirm ? "Hide password" : "Show password"}>
+                  {showConfirm ? <EyeOffIcon /> : <EyeIcon />}
+                </button>
+              </div>
+            </div>
+          </div>
 
-        <label htmlFor="reg-birthDate">Birth Date</label>
-        <input id="reg-birthDate" name="birthDate" type="date" onChange={handleChange} required />
+          <button className="reg-submit-btn" type="submit" disabled={loading}>
+            {loading ? (
+              <>
+                <span className="reg-spinner" aria-hidden="true" />
+                Creating account…
+              </>
+            ) : "Create Account"}
+          </button>
+        </form>
 
-        <label htmlFor="reg-password">Password</label>
-        <input id="reg-password" name="password" type="password" placeholder="••••••••" onChange={handleChange} required />
-
-        <label htmlFor="reg-confirmPassword">Confirm Password</label>
-        <input id="reg-confirmPassword" name="confirmPassword" type="password" placeholder="••••••••" onChange={handleChange} required />
-
-        <button className="signup-btn" onClick={handleSignUp} disabled={loading}>
-          {loading ? "Creating account…" : "Sign Up"}
-        </button>
-
-        <p className="login-text">
+        <p className="reg-login-text">
           Already have an account?{" "}
-          <Link to="/" className="login-link">Log In</Link>
+          <Link to="/" className="reg-login-link">Sign in</Link>
         </p>
       </div>
     </div>
