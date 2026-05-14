@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import "./Legalpage.css";
+import "./legalpage.css";
 
 export default function PrivacyPolicy() {
   const navigate = useNavigate();
