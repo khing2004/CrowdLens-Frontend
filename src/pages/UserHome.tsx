@@ -11,6 +11,7 @@ import BottomNav from "../components/BottomNav";
 import ThresholdPicker, { type Threshold } from "../components/ThresholdPicker";
 import AlertModal from "../components/AlertModal";
 import { toastSuccess, toastError, toastWarning } from "../components/Toast";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   TrendingUp,
@@ -314,6 +315,7 @@ function DashboardSection({ locations }: DashboardSectionProps) {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function UserHomePage() {
+  const navigate = useNavigate();
   const { user, pendingAlerts, clearAlerts } = useAuth();
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<CrowdLocation | null>(null);
@@ -472,6 +474,10 @@ export default function UserHomePage() {
               <strong>{locations.length} Tracked</strong>
             </div>
           </div>
+
+          <button className="forecast-link-btn" onClick={() => navigate("/forecast")}>
+            View Forecast
+          </button>
 
           <main className="map-section">
             <MapContainer center={center} zoom={14} className="main-map">
