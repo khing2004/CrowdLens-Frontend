@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 import { getUserProfile, updateUserProfile, type UserProfile } from "../api/userService";
 import "./Profile.css";
 
@@ -26,7 +25,6 @@ const DEFAULTS: UserProfile = {
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [profile, setProfile] = useState<UserProfile>(DEFAULTS);
