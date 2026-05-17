@@ -1,17 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { getUserProfile, updateUserProfile, type UserProfile } from "../api/userService";
 import "./Profile.css";
-
-interface ProfileData {
-  username: string;
-  email: string;
-  pronouns: string;
-  address: string;
-  birthday: string;
-  bio: string;
-  avatar: string;
-}
 
 const PRONOUNS_OPTIONS = [
   "He/Him",
@@ -23,24 +14,38 @@ const PRONOUNS_OPTIONS = [
   "Other",
 ];
 
+const DEFAULTS: UserProfile = {
+  username: "",
+  email: "",
+  pronouns: "Prefer not to say",
+  address: "",
+  birthday: "",
+  bio: "",
+  avatar: "",
+};
+
 export default function Profile() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [profile, setProfile] = useState<ProfileData>({
-    username: user?.name ?? "",
-    email: user?.email ?? "",
-    pronouns: "Prefer not to say",
-    address: "",
-    birthday: "",
-    bio: "This is a sample bio for the user. It can be edited in the profile settings.",
-    avatar: "/Logo.png",
-  });
-
-  const [draft, setDraft] = useState<ProfileData>({ ...profile });
+  const [profile, setProfile] = useState<UserProfile>(DEFAULTS);
+  const [draft, setDraft] = useState<UserProfile>(DEFAULTS);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getUserProfile()
+      .then((data) => {
+        const filled = { ...DEFAULTS, ...data };
+        setProfile(filled);
+        setDraft(filled);
+      })
+      .catch(() => setError("Could not load profile. Please try again."))
+      .finally(() => setLoading(false));
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -52,32 +57,57 @@ export default function Profile() {
     setSaved(false);
   };
 
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click();
-  };
+  const handleAvatarClick = () => fileInputRef.current?.click();
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setAvatarPreview(url);
-    setDraft((prev) => ({ ...prev, avatar: url }));
-    setSaved(false);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setDraft((prev) => ({ ...prev, avatar: base64 }));
+      setSaved(false);
+    };
+    reader.readAsDataURL(file);
   };
 
-  const handleSave = () => {
-    setProfile({ ...draft });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+  const handleSave = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      await updateUserProfile(draft);
+      setProfile({ ...draft });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch {
+      setError("Failed to save. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDiscard = () => {
     setDraft({ ...profile });
-    setAvatarPreview(null);
     setSaved(false);
   };
 
   const isDirty = JSON.stringify(draft) !== JSON.stringify(profile);
+  const avatarSrc = draft.avatar || "/Logo.png";
+
+  if (loading) {
+    return (
+      <div className="profile-page">
+        <div className="profile-topbar">
+          <button className="back-btn" onClick={() => navigate("/settings")}>‹ Back</button>
+          <h1 className="profile-topbar-title">Edit Profile</h1>
+          <div style={{ width: 60 }} />
+        </div>
+        <p style={{ textAlign: "center", padding: "40px 20px", color: "#7a8f82" }}>
+          Loading profile…
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="profile-page">
@@ -93,11 +123,7 @@ export default function Profile() {
       {/* Avatar */}
       <div className="avatar-section">
         <div className="avatar-ring">
-          <img
-            src={avatarPreview ?? draft.avatar}
-            alt="Profile"
-            className="avatar-img"
-          />
+          <img src={avatarSrc} alt="Profile" className="avatar-img" />
           <button className="avatar-edit-btn" onClick={handleAvatarClick}>
             <span className="camera-icon">📷</span>
           </button>
@@ -114,6 +140,12 @@ export default function Profile() {
 
       {/* Form */}
       <div className="profile-form">
+        {error && (
+          <p style={{ color: "#e74c3c", fontSize: 13, textAlign: "center", margin: "0 0 8px" }}>
+            {error}
+          </p>
+        )}
+
         {/* Identity */}
         <div className="form-section">
           <p className="form-section-label">Identity</p>
@@ -139,9 +171,7 @@ export default function Profile() {
               onChange={handleChange}
             >
               {PRONOUNS_OPTIONS.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
+                <option key={p} value={p}>{p}</option>
               ))}
             </select>
           </div>
@@ -170,11 +200,11 @@ export default function Profile() {
             <input
               className="field-input"
               type="email"
-              name="email"
               value={draft.email}
-              onChange={handleChange}
-              placeholder="hello@example.com"
+              disabled
+              style={{ opacity: 0.6, cursor: "not-allowed" }}
             />
+            <p className="field-hint">Email cannot be changed here</p>
           </div>
 
           <div className="field-group">
@@ -211,11 +241,11 @@ export default function Profile() {
           <button
             className="save-btn"
             onClick={handleSave}
-            disabled={!isDirty}
+            disabled={!isDirty || saving}
           >
-            {saved ? "✓ Saved!" : "Save Changes"}
+            {saving ? "Saving…" : saved ? "✓ Saved!" : "Save Changes"}
           </button>
-          {isDirty && (
+          {isDirty && !saving && (
             <button className="discard-btn" onClick={handleDiscard}>
               Discard
             </button>

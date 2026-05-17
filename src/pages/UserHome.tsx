@@ -317,6 +317,15 @@ function DashboardSection({ locations }: DashboardSectionProps) {
 export default function UserHomePage() {
   const navigate = useNavigate();
   const { user, pendingAlerts, clearAlerts } = useAuth();
+
+  const notificationsEnabled = (() => {
+    if (!user?.email) return true;
+    try {
+      const saved = localStorage.getItem(`cl_settings_${user.email}`);
+      return saved ? (JSON.parse(saved)?.notificationsEnabled ?? true) : true;
+    } catch { return true; }
+  })();
+
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<CrowdLocation | null>(null);
   const [locations, setLocations] = useState<CrowdLocation[]>([]);
@@ -407,6 +416,21 @@ export default function UserHomePage() {
 
   const handleFinalConfirm = async (remark: string) => {
     if (!selectedLocation || !pendingLevel) return;
+
+    // Respect location sharing preference
+    const locationSharingOn = (() => {
+      if (!user?.email) return true;
+      try {
+        const saved = localStorage.getItem(`cl_settings_${user.email}`);
+        return saved ? (JSON.parse(saved)?.locationEnabled ?? true) : true;
+      } catch { return true; }
+    })();
+
+    if (!locationSharingOn) {
+      toastError("Location sharing is disabled. Enable it in Settings to submit reports.");
+      setIsConfirmOpen(false);
+      return;
+    }
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
@@ -617,9 +641,9 @@ export default function UserHomePage() {
         onConfirm={handleFinalConfirm}
       />
 
-      {/* Post-login crowd alerts */}
+      {/* Post-login crowd alerts — suppressed when notifications are off */}
       <AlertModal
-        alerts={pendingAlerts}
+        alerts={notificationsEnabled ? pendingAlerts : []}
         onDismiss={clearAlerts}
         onViewOnMap={(locationId) => {
           const loc = locations.find(l => l.id === locationId);

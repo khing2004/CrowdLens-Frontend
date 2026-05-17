@@ -419,6 +419,175 @@
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  object-fit: contain;
+  object-fit: cover;
   border: 3px solid #e8f5ec;
+}
+
+/* ── Karma Hero Card ── */
+.karma-card {
+  margin: 16px 20px 0;
+  border-radius: 22px;
+  padding: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* default (zero) gradient border — brand green */
+.karma-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #30924C 0%, #27ae60 55%, #52be80 100%);
+  z-index: 0;
+}
+
+/* positive — richer, deeper green */
+.karma-card.karma-pos::before {
+  background: linear-gradient(135deg, #1e6635 0%, #30924C 55%, #27ae60 100%);
+}
+
+/* negative — red */
+.karma-card.karma-neg::before {
+  background: linear-gradient(135deg, #c0392b 0%, #e74c3c 60%, #f1948a 100%);
+}
+
+.karma-card-inner {
+  position: relative;
+  z-index: 1;
+  border-radius: 20px;
+  padding: 28px 20px 22px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+/* zero — very light green wash */
+.karma-card.karma-zero .karma-card-inner {
+  background: linear-gradient(160deg, #f0fdf4 0%, #e8f5ed 100%);
+}
+
+/* positive — slightly more saturated green */
+.karma-card.karma-pos .karma-card-inner {
+  background: linear-gradient(160deg, #e8f5ed 0%, #d4edda 100%);
+}
+
+/* negative */
+.karma-card.karma-neg .karma-card-inner {
+  background: linear-gradient(160deg, #fff5f5 0%, #fee2e2 100%);
+}
+
+.karma-eyebrow {
+  font-family: 'Sora', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #1e6635;
+  margin: 0;
+}
+
+.karma-card.karma-neg .karma-eyebrow { color: #9b1c1c; }
+
+.karma-score {
+  font-family: 'Sora', sans-serif;
+  font-size: 60px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -2px;
+  color: #30924C;
+  margin: 4px 0 2px;
+  text-shadow: 0 4px 20px rgba(48, 146, 76, 0.18);
+}
+
+.karma-score.pos {
+  color: #1e6635;
+  text-shadow: 0 4px 20px rgba(30, 102, 53, 0.25);
+}
+
+.karma-score.neg {
+  color: #c0392b;
+  text-shadow: 0 4px 20px rgba(192, 57, 43, 0.2);
+}
+
+.karma-rank-badge {
+  display: inline-block;
+  font-family: 'Sora', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(48, 146, 76, 0.12);
+  color: #1e6635;
+  border: 1px solid rgba(48, 146, 76, 0.3);
+}
+
+.karma-card.karma-pos .karma-rank-badge {
+  background: rgba(30, 102, 53, 0.14);
+  color: #1e6635;
+  border-color: rgba(30, 102, 53, 0.32);
+}
+
+.karma-card.karma-neg .karma-rank-badge {
+  background: rgba(231, 76, 60, 0.1);
+  color: #c0392b;
+  border-color: rgba(231, 76, 60, 0.28);
+}
+
+.karma-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 4px 0 0;
+}
+
+/* ── Karma Badge (profile card) ── */
+.karma-badge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: #f4faf6;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.karma-badge.pos {
+  background: var(--green-light);
+  color: var(--green);
+  border-color: var(--green-mid);
+}
+
+.karma-badge.neg {
+  background: #fff5f5;
+  color: #e74c3c;
+  border-color: #f5c6c2;
+}
+
+/* ── Settings status badge (On / Off / All etc.) ── */
+.settings-status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  margin-right: 8px;
+  border: 1px solid var(--border);
+  background: #f0f4f2;
+  color: var(--text-muted);
+}
+
+.settings-status-badge.on {
+  background: var(--green-light);
+  color: var(--green);
+  border-color: var(--green-mid);
+}
+
+.settings-status-badge.off {
+  background: #fff5f5;
+  color: #e74c3c;
+  border-color: #f5c6c2;
 }

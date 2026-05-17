@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getLocationReports, voteOnReport, type ReportDetail } from "../../api/crowdService";
 import { toastError, toastWarning } from "../Toast";
+import { useAuth } from "../../context/AuthContext";
 import "./ReportsList.css";
 
 const DENSITY_COLOR: Record<string, string> = {
@@ -18,11 +19,22 @@ function timeAgo(isoStr: string): string {
   return `${Math.floor(mins / 60)}h ago`;
 }
 
+function isLocationSharingEnabled(email: string | undefined): boolean {
+  if (!email) return true;
+  try {
+    const saved = localStorage.getItem(`cl_settings_${email}`);
+    return saved ? (JSON.parse(saved)?.locationEnabled ?? true) : true;
+  } catch {
+    return true;
+  }
+}
+
 interface Props {
   locationId: number;
 }
 
 export default function ReportsList({ locationId }: Props) {
+  const { user } = useAuth();
   const [reports, setReports] = useState<ReportDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [votingId, setVotingId] = useState<number | null>(null);
@@ -37,6 +49,12 @@ export default function ReportsList({ locationId }: Props) {
 
   const handleVote = (reportId: number, voteType: "Up" | "Down") => {
     if (votingId !== null) return;
+
+    if (!isLocationSharingEnabled(user?.email)) {
+      toastError("Location sharing is disabled. Enable it in Settings to vote on reports.");
+      return;
+    }
+
     setVotingId(reportId);
 
     navigator.geolocation.getCurrentPosition(
@@ -44,8 +62,9 @@ export default function ReportsList({ locationId }: Props) {
         const { latitude, longitude } = position.coords;
         try {
           const result = await voteOnReport(reportId, voteType, latitude, longitude);
-          setReports(prev =>
-            prev.map(r =>
+
+          setReports((prev) =>
+            prev.map((r) =>
               r.id === reportId
                 ? { ...r, upvotes: result.upvotes, downvotes: result.downvotes, userVote: result.userVote }
                 : r
@@ -74,7 +93,7 @@ export default function ReportsList({ locationId }: Props) {
 
   return (
     <div className="rl-list">
-      {reports.map(r => {
+      {reports.map((r) => {
         const color = DENSITY_COLOR[r.densityLevel] ?? "#30924C";
         const karma = r.upvotes - r.downvotes;
         const isVoting = votingId === r.id;
@@ -99,7 +118,7 @@ export default function ReportsList({ locationId }: Props) {
                 ▲
               </button>
               <span className={`rl-karma ${karma > 0 ? "pos" : karma < 0 ? "neg" : ""}`}>
-                {isVoting ? "…" : (karma > 0 ? `+${karma}` : karma)}
+                {isVoting ? "…" : karma > 0 ? `+${karma}` : karma}
               </span>
               <button
                 className={`rl-vote-btn down ${r.userVote === "Down" ? "active" : ""}`}
