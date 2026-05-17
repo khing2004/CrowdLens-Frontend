@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getLocationReports, voteOnReport, type ReportDetail } from "../../api/crowdService";
+import { getKarmaByName } from "../../api/userService";
 import { toastError, toastWarning } from "../Toast";
 import { useAuth } from "../../context/AuthContext";
 import "./ReportsList.css";
@@ -19,6 +20,16 @@ function timeAgo(isoStr: string): string {
   return `${Math.floor(mins / 60)}h ago`;
 }
 
+function karmaRank(pts: number): string {
+  if (pts < 0)  return "Disputed Reporter";
+  if (pts < 1)  return "New Reporter";
+  if (pts < 5)  return "Contributor";
+  if (pts < 15) return "Trusted Reporter";
+  if (pts < 30) return "Crowd Expert";
+  if (pts < 50) return "Senior Analyst";
+  return "Elite Lens";
+}
+
 function isLocationSharingEnabled(email: string | undefined): boolean {
   if (!email) return true;
   try {
@@ -27,6 +38,12 @@ function isLocationSharingEnabled(email: string | undefined): boolean {
   } catch {
     return true;
   }
+}
+
+interface ReporterProfile {
+  name: string;
+  karma: number | null;
+  loading: boolean;
 }
 
 interface Props {
@@ -38,6 +55,7 @@ export default function ReportsList({ locationId }: Props) {
   const [reports, setReports] = useState<ReportDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [votingId, setVotingId] = useState<number | null>(null);
+  const [profile, setProfile] = useState<ReporterProfile | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -46,6 +64,18 @@ export default function ReportsList({ locationId }: Props) {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [locationId]);
+
+  const handleNameClick = async (name: string) => {
+    setProfile({ name, karma: null, loading: true });
+    try {
+      const karma = await getKarmaByName(name);
+      setProfile({ name, karma, loading: false });
+    } catch {
+      setProfile({ name, karma: 0, loading: false });
+    }
+  };
+
+  const closeProfile = () => setProfile(null);
 
   const handleVote = (reportId: number, voteType: "Up" | "Down") => {
     if (votingId !== null) return;
@@ -62,7 +92,6 @@ export default function ReportsList({ locationId }: Props) {
         const { latitude, longitude } = position.coords;
         try {
           const result = await voteOnReport(reportId, voteType, latitude, longitude);
-
           setReports((prev) =>
             prev.map((r) =>
               r.id === reportId
@@ -91,47 +120,92 @@ export default function ReportsList({ locationId }: Props) {
   if (loading) return <p className="rl-empty">Loading reports…</p>;
   if (reports.length === 0) return <p className="rl-empty">No reports in the last hour.</p>;
 
+  const karma = profile?.karma ?? 0;
+
   return (
-    <div className="rl-list">
-      {reports.map((r) => {
-        const color = DENSITY_COLOR[r.densityLevel] ?? "#30924C";
-        const karma = r.upvotes - r.downvotes;
-        const isVoting = votingId === r.id;
-        return (
-          <div className="rl-card" key={r.id}>
-            <div className="rl-top">
-              <span className="rl-badge" style={{ color, background: `${color}18` }}>
-                ● {r.densityLevel}
-              </span>
-              <span className="rl-meta">{r.userName} · {timeAgo(r.reportedAt)}</span>
+    <>
+      <div className="rl-list">
+        {reports.map((r) => {
+          const color = DENSITY_COLOR[r.densityLevel] ?? "#30924C";
+          const reportKarma = r.upvotes - r.downvotes;
+          const isVoting = votingId === r.id;
+          return (
+            <div className="rl-card" key={r.id}>
+              <div className="rl-top">
+                <span className="rl-badge" style={{ color, background: `${color}18` }}>
+                  ● {r.densityLevel}
+                </span>
+                <span className="rl-meta">
+                  <button
+                    className="rl-reporter-name"
+                    onClick={() => handleNameClick(r.userName)}
+                    title="View CrowdLens Points"
+                  >
+                    {r.userName}
+                  </button>
+                  {" · "}
+                  {timeAgo(r.reportedAt)}
+                </span>
+              </div>
+
+              {r.remark && <p className="rl-remark">"{r.remark}"</p>}
+
+              <div className="rl-votes">
+                <button
+                  className={`rl-vote-btn up ${r.userVote === "Up" ? "active" : ""}`}
+                  onClick={() => handleVote(r.id, "Up")}
+                  disabled={isVoting}
+                  title="Upvote"
+                >
+                  ▲
+                </button>
+                <span className={`rl-karma ${reportKarma > 0 ? "pos" : reportKarma < 0 ? "neg" : ""}`}>
+                  {isVoting ? "…" : reportKarma > 0 ? `+${reportKarma}` : reportKarma}
+                </span>
+                <button
+                  className={`rl-vote-btn down ${r.userVote === "Down" ? "active" : ""}`}
+                  onClick={() => handleVote(r.id, "Down")}
+                  disabled={isVoting}
+                  title="Downvote"
+                >
+                  ▼
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Reporter profile popup */}
+      {profile && (
+        <div className="rp-overlay" onClick={closeProfile}>
+          <div className="rp-card" onClick={(e) => e.stopPropagation()}>
+            <div className="rp-header">
+              <span className="rp-title">Reporter Profile</span>
+              <button className="rp-close" onClick={closeProfile}>✕</button>
             </div>
 
-            {r.remark && <p className="rl-remark">"{r.remark}"</p>}
+            <div className="rp-body">
+              <div className="rp-avatar">★</div>
+              <p className="rp-name">{profile.name}</p>
 
-            <div className="rl-votes">
-              <button
-                className={`rl-vote-btn up ${r.userVote === "Up" ? "active" : ""}`}
-                onClick={() => handleVote(r.id, "Up")}
-                disabled={isVoting}
-                title="Upvote"
-              >
-                ▲
-              </button>
-              <span className={`rl-karma ${karma > 0 ? "pos" : karma < 0 ? "neg" : ""}`}>
-                {isVoting ? "…" : karma > 0 ? `+${karma}` : karma}
-              </span>
-              <button
-                className={`rl-vote-btn down ${r.userVote === "Down" ? "active" : ""}`}
-                onClick={() => handleVote(r.id, "Down")}
-                disabled={isVoting}
-                title="Downvote"
-              >
-                ▼
-              </button>
+              {profile.loading ? (
+                <p className="rp-loading">Loading…</p>
+              ) : (
+                <>
+                  <p className={`rp-score ${karma > 0 ? "pos" : karma < 0 ? "neg" : ""}`}>
+                    {karma > 0 ? `+${karma}` : karma}
+                  </p>
+                  <span className={`rp-rank ${karma > 0 ? "pos" : karma < 0 ? "neg" : ""}`}>
+                    {karmaRank(karma)}
+                  </span>
+                  <p className="rp-label">CrowdLens Points</p>
+                </>
+              )}
             </div>
           </div>
-        );
-      })}
-    </div>
+        </div>
+      )}
+    </>
   );
 }

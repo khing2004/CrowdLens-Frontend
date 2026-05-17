@@ -29,6 +29,13 @@ export const getUserKarma = async (): Promise<number> => {
   return response.data.karma;
 };
 
+export const getKarmaByName = async (name: string): Promise<number> => {
+  const response = await apiClient.get("/api/User/karma-by-name", {
+    params: { name },
+  });
+  return response.data.karma;
+};
+
 export const getUserSettings = async (): Promise<UserSettings> => {
   const response = await apiClient.get("/api/User/settings");
   return response.data;
