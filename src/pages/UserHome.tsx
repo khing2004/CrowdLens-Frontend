@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, useMap, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "./UserHome.css";
 import "../components/Home/CustomPopup.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { densityClasses, getIconByDensity } from "../utils/crowdHelper";
 import ReportModal from "../components/Home/ReportModal";
 import ReportsList from "../components/Home/ReportsList";
@@ -334,6 +334,9 @@ export default function UserHomePage() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   const [activeTab, setActiveTab] = useState<"home" | "dashboard">("home");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
   const [reportsOpenFor, setReportsOpenFor] = useState<number | null>(null);
 
   // Threshold picker state: which location's popup is showing the picker
@@ -370,6 +373,17 @@ export default function UserHomePage() {
       .catch(() => {})
       .finally(() => setPopupForecastLoading(false));
   }, [selectedLocation?.id]);
+
+  // Close search dropdown when clicking outside — must be before any early return
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   if (loading) {
     return <div className="loading-screen">Loading CrowdLens Map…</div>;
@@ -458,6 +472,22 @@ export default function UserHomePage() {
     );
   };
 
+  const filteredLocations = searchQuery.trim()
+    ? locations
+        .filter(l =>
+          l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          l.type.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .slice(0, 6)
+    : [];
+
+  const handleSearchSelect = (loc: CrowdLocation) => {
+    setSelectedLocation(loc);
+    setActiveTab("home");
+    setSearchQuery("");
+    setSearchOpen(false);
+  };
+
   const center: [number, number] = [10.3223, 123.8982];
   const displayName = user?.name ? user.name.split(" ")[0] : "there";
 
@@ -502,6 +532,45 @@ export default function UserHomePage() {
           <button className="forecast-link-btn" onClick={() => navigate("/forecast")}>
             View Forecast
           </button>
+
+          {/* Location search bar */}
+          <div className="location-search" ref={searchRef}>
+            <div className="location-search-input-wrapper">
+              <span className="location-search-icon">🔍</span>
+              <input
+                className="location-search-input"
+                type="text"
+                placeholder="Search locations…"
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }}
+                onFocus={() => setSearchOpen(true)}
+              />
+              {searchQuery && (
+                <button className="location-search-clear" onClick={() => { setSearchQuery(""); setSearchOpen(false); }}>
+                  ✕
+                </button>
+              )}
+            </div>
+            {searchOpen && filteredLocations.length > 0 && (
+              <ul className="location-search-results">
+                {filteredLocations.map(loc => (
+                  <li key={loc.id} className="location-search-item" onClick={() => handleSearchSelect(loc)}>
+                    <span className="lsi-dot" style={{ color: DENSITY_COLOR[loc.density] }}>●</span>
+                    <div className="lsi-info">
+                      <span className="lsi-name">{loc.name}</span>
+                      <span className="lsi-type">{loc.type}</span>
+                    </div>
+                    <span className="lsi-density" style={{ color: DENSITY_COLOR[loc.density] }}>
+                      {loc.density}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {searchOpen && searchQuery.trim() && filteredLocations.length === 0 && (
+              <div className="location-search-empty">No locations found</div>
+            )}
+          </div>
 
           <main className="map-section">
             <MapContainer center={center} zoom={14} className="main-map">

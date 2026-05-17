@@ -100,6 +100,136 @@
   cursor: pointer;
 }
 
+/* ── Location Search ── */
+.location-search {
+  position: relative;
+  margin: 0 20px 12px;
+  z-index: 1000;
+}
+
+.location-search-input-wrapper {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1.5px solid #e2ede6;
+  border-radius: 12px;
+  padding: 0 12px;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(48, 146, 76, 0.08);
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.location-search-input-wrapper:focus-within {
+  border-color: #30924C;
+  box-shadow: 0 0 0 3px rgba(48, 146, 76, 0.12);
+}
+
+.location-search-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.location-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: #1a2e22;
+  padding: 11px 0;
+}
+
+.location-search-input::placeholder {
+  color: #b2bec3;
+}
+
+.location-search-clear {
+  background: none;
+  border: none;
+  color: #b2bec3;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.location-search-clear:hover {
+  color: #64748b;
+}
+
+.location-search-results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e2ede6;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.location-search-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.location-search-item:hover {
+  background: #f4faf6;
+}
+
+.lsi-dot {
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.lsi-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.lsi-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a2e22;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lsi-type {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.lsi-density {
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.location-search-empty {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #94a3b8;
+  text-align: center;
+}
+
 /* Map Styling */
 .map-section {
   margin: 0 20px 100px;
