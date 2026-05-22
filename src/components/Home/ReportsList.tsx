@@ -13,8 +13,13 @@ const DENSITY_COLOR: Record<string, string> = {
   "Very Low":  "#84cc16",
 };
 
+function parseUtc(isoStr: string): Date {
+  // Strings without a timezone suffix are treated as local time by JS — force UTC
+  return new Date(/[Z+\-]\d*$/.test(isoStr) ? isoStr : isoStr + 'Z');
+}
+
 function timeAgo(isoStr: string): string {
-  const mins = Math.floor((Date.now() - new Date(isoStr).getTime()) / 60000);
+  const mins = Math.floor((Date.now() - parseUtc(isoStr).getTime()) / 60000);
   if (mins < 1) return "Just now";
   if (mins < 60) return `${mins}m ago`;
   return `${Math.floor(mins / 60)}h ago`;

@@ -54,8 +54,12 @@ function avgDensityLabel(locations: CrowdLocation[]): string {
   return "Very High";
 }
 
+function parseUtc(isoStr: string): Date {
+  return new Date(/[Z+\-]\d*$/.test(isoStr) ? isoStr : isoStr + 'Z');
+}
+
 function timeAgo(isoStr: string): string {
-  const mins = Math.floor((Date.now() - new Date(isoStr).getTime()) / 60000);
+  const mins = Math.floor((Date.now() - parseUtc(isoStr).getTime()) / 60000);
   if (mins < 1) return "Just now";
   if (mins < 60) return `${mins} min ago`;
   return `${Math.floor(mins / 60)} hr ago`;
