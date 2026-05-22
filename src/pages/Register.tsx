@@ -61,7 +61,14 @@ export default function Register() {
       toastSuccess("Registration successful! Redirecting to login…");
       setTimeout(() => navigate("/"), 1800);
     } catch (err: any) {
-      toastError(err.response?.data?.message || "Registration failed. Please try again.");
+      const data = err.response?.data;
+      let msg = "Registration failed. Please try again.";
+      if (typeof data === "string") {
+        msg = data;
+      } else if (Array.isArray(data)) {
+        msg = data.map((e: any) => e.description).join(" ");
+      }
+      toastError(msg);
     } finally {
       setLoading(false);
     }
@@ -108,11 +115,12 @@ export default function Register() {
             <div className="reg-field">
               <label htmlFor="reg-password">Password</label>
               <div className="reg-input-wrapper">
-                <input id="reg-password" name="password" type={showPassword ? "text" : "password"} placeholder="••••••••" onChange={handleChange} required />
+                <input id="reg-password" name="password" type={showPassword ? "text" : "password"} placeholder="••••••••" onChange={handleChange} required autoComplete="new-password" autoCorrect="off" autoCapitalize="off" />
                 <button type="button" className="reg-toggle-password" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? "Hide password" : "Show password"}>
                   {showPassword ? <EyeOffIcon /> : <EyeIcon />}
                 </button>
               </div>
+              <p className="reg-hint">Min. 6 chars with uppercase, number &amp; symbol (e.g. Pass@123)</p>
             </div>
             <div className="reg-field">
               <label htmlFor="reg-confirmPassword">Confirm Password</label>

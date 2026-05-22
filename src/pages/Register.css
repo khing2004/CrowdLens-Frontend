@@ -108,6 +108,12 @@
   flex-direction: column;
 }
 
+.reg-hint {
+  font-size: 11px;
+  color: #6b7280;
+  margin: 4px 0 0 2px;
+}
+
 .reg-field label {
   font-size: 13px;
   font-weight: 600;

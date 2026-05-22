@@ -125,13 +125,24 @@ function Sparkline({ slots, modelType }: { slots: ForecastSlot[]; modelType: str
   );
 }
 
-// ── Map helper ────────────────────────────────────────────────────────────────
+// ── Map helpers ───────────────────────────────────────────────────────────────
 
 function RecenterAutomatically({ location }: { location: CrowdLocation }) {
   const map = useMap();
   useEffect(() => {
     map.flyTo(location.pos, 18, { animate: true, duration: 0.7 });
   }, [location, map]);
+  return null;
+}
+
+function ZoomTracker({ onZoomChange }: { onZoomChange: (zoom: number) => void }) {
+  const map = useMap();
+  useEffect(() => {
+    onZoomChange(map.getZoom());
+    const handler = () => onZoomChange(map.getZoom());
+    map.on("zoomend", handler);
+    return () => { map.off("zoomend", handler); };
+  }, [map, onZoomChange]);
   return null;
 }
 
@@ -345,6 +356,7 @@ export default function UserHomePage() {
 
   const [popupForecast, setPopupForecast] = useState<{ slots: ForecastSlot[]; modelType: string } | null>(null);
   const [, setPopupForecastLoading] = useState(false);
+  const [mapZoom, setMapZoom] = useState(14);
 
   // Load locations and saved favorites in parallel on mount
   useEffect(() => {
@@ -490,6 +502,7 @@ export default function UserHomePage() {
 
   const center: [number, number] = [10.3223, 123.8982];
   const displayName = user?.name ? user.name.split(" ")[0] : "there";
+  const popupWidth = Math.max(200, Math.min(320, (mapZoom - 10) * 30 + 160));
 
   return (
     <div className="user-home-page">
@@ -578,6 +591,7 @@ export default function UserHomePage() {
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 attribution="&copy; OpenStreetMap"
               />
+              <ZoomTracker onZoomChange={setMapZoom} />
               {selectedLocation && <RecenterAutomatically location={selectedLocation} />}
               {locations.map((location) => (
                 <Marker
@@ -586,7 +600,7 @@ export default function UserHomePage() {
                   icon={getIconByDensity(location.density)}
                   eventHandlers={{ click: () => setSelectedLocation(location) }}
                 >
-                  <Popup className="custom-popup">
+                  <Popup className="custom-popup" maxWidth={popupWidth}>
                     <div className="popup-container">
                       <div className="popup-header">
                         <div className="badge-wrapper">
