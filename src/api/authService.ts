@@ -7,7 +7,6 @@ export const apiClient = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
-    timeout: 60000, // 60s — accounts for Render cold start (~30-50s)
 });
 // Why do we need content-type: application/json? what is this for? how does axios.create work? 
 
