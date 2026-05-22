@@ -148,7 +148,7 @@
   text-align: center;
 }
 
-.fc-pill:hover { border-color: #30924C; color: #30924C; }
+.fc-pill:hover { border-color: #30924C; }
 
 .fc-pill-active {
   background: #30924C;
