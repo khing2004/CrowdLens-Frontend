@@ -19,12 +19,28 @@ apiClient.interceptors.request.use((config) => {
     return config;
 });
 
+// Ping the backend every 10 min while the tab is open to prevent Render cold starts
+const PING_INTERVAL_MS = 10 * 60 * 1000;
+let _pingTimer: ReturnType<typeof setInterval> | null = null;
+
+export function startKeepAlive() {
+    if (_pingTimer) return;
+    _pingTimer = setInterval(() => {
+        apiClient.get('/api/Crowd/locations').catch(() => {});
+    }, PING_INTERVAL_MS);
+}
+
+export function stopKeepAlive() {
+    if (_pingTimer) { clearInterval(_pingTimer); _pingTimer = null; }
+}
+
 export const authService = {
     // Login method
     async login(email: string, password:string) {
         const response = await apiClient.post(`${API_URL}/api/Auth/login`, { email, password });
         if (response.data.token){ //how are we able to access data.token?
             localStorage.setItem('token', response.data.token); // what does setItem do? is localStorage enough for a scalable website? can it support many users?
+            startKeepAlive();
         }
 
         return response.data;
@@ -45,6 +61,7 @@ export const authService = {
     // for log out
     logout() {
         localStorage.removeItem('token');
+        stopKeepAlive();
     },
 
     getToken(){
